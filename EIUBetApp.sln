@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EIUBetApp", "EIUBetApp.csproj", "{B7CA3ECC-950C-45BC-B2FE-2E938B6B73F8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7CA3ECC-950C-45BC-B2FE-2E938B6B73F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7CA3ECC-950C-45BC-B2FE-2E938B6B73F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7CA3ECC-950C-45BC-B2FE-2E938B6B73F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7CA3ECC-950C-45BC-B2FE-2E938B6B73F8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {05509F6C-08CC-47B8-8CFE-8F9303FC6918}
+	EndGlobalSection
+EndGlobal
