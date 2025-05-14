@@ -1,0 +1,158 @@
+﻿body {
+    margin: 0;
+    font-family: sans-serif;
+    background: black;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background-color: #222;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-right: 2px solid #444;
+}
+
+.user-card {
+    background: #333;
+    padding: 15px;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.game-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    position: relative;
+}
+
+.dice-wrapper {
+    display: flex;
+    gap: 30px;
+}
+
+.containerD {
+    height: 150px;
+    width: 150px;
+    transform-style: preserve-3d;
+    transition: transform 1s ease-in-out;
+    position: relative;
+}
+
+    .containerD div {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        display: grid;
+        place-items: center;
+        background: #FB980D;
+        border: 4px solid white;
+        border-radius: 20px;
+        filter: blur(1px);
+        opacity: 0.9;
+    }
+
+/* Dice face positioning (same as before) */
+.left {
+    transform: translate(75px) rotateY(90deg);
+}
+
+.right {
+    transform: translate(-75px) rotateY(90deg);
+}
+
+.front {
+    transform: translateZ(-75px) rotateZ(90deg);
+}
+
+.back {
+    transform: translateZ(75px) rotateZ(90deg);
+    grid-template-columns: 70px auto;
+}
+
+.up {
+    transform: translateY(-75px) rotateX(90deg);
+    grid-template-columns: 30px 30px 20px;
+}
+
+.down {
+    transform: translateY(75px) rotateX(90deg);
+    grid-template-columns: auto auto auto;
+}
+
+.dot {
+    height: 20px;
+    width: 20px;
+    background: white;
+    border-radius: 50%;
+}
+
+.btn {
+    height: 60px;
+    width: 250px;
+    font-size: 25px;
+    background: #FB980D;
+    cursor: pointer;
+    opacity: 0.9;
+    color: white;
+}
+
+.bgeffect {
+    height: 500px;
+    width: 500px;
+    background: #FB980D;
+    position: absolute;
+    border-radius: 50%;
+    z-index: -1;
+    filter: blur(550px);
+}
+
+.prediction-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+    gap: 10px;
+}
+
+    .prediction-buttons button {
+        padding: 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+.btn {
+    display: block;
+    margin: 1rem auto;
+    padding: 12px 20px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.readyBtn {
+    margin: 1rem auto;
+    padding: 12px 20px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.result {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    font-weight: bold;
+}
