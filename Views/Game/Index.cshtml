@@ -1,183 +1,322 @@
 ﻿@{
-	Layout = "_GameLayout";
+    Layout = "_GameLayout";
 }
 <!DOCTYPE html>
 <html>
 <head>
-	<title>3D Dice Game</title>
-	<link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+    <title>Game Tài Xỉu</title>
+    <h2>Chào mừng đến với phòng: @ViewBag.RoomName</h2>
+    <link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+    <style>
+        body {
+            background: #343a40;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+            .sidebar .user-card h4 {
+                font-weight: 700;
+            }
+
+            .sidebar a {
+                color: #adb5bd;
+                text-decoration: none;
+                margin-top: 20px;
+                font-weight: 500;
+            }
+
+                .sidebar a:hover {
+                    color: white;
+                    text-decoration: underline;
+                }
+
+        .game-section {
+            flex-grow: 1;
+            padding: 40px;
+            background: #343a40;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dice-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .containerD {
+            width: 80px;
+            height: 80px;
+            background: #007bff;
+            color: white;
+            font-size: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.5);
+            user-select: none;
+        }
+
+        .prediction-buttons {
+            margin-bottom: 20px;
+        }
+
+        .predict-btn {
+            margin: 0 10px;
+            padding: 10px 30px;
+            font-weight: 600;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .predict-btn[data-value="xiu"] {
+                background-color: #17a2b8;
+                color: white;
+            }
+
+            .predict-btn[data-value="tai"] {
+                background-color: #28a745;
+                color: white;
+            }
+
+            .predict-btn:hover {
+                opacity: 0.8;
+            }
+
+            .predict-btn:focus {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+            }
+
+            .predict-btn.active {
+                background-color: #8f8 !important;
+            }
+
+        #spinBtn {
+            padding: 12px 40px;
+            font-weight: 700;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 40px;
+            color: #212529;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.6);
+            margin-bottom: 20px;
+        }
+
+            #spinBtn:hover {
+                background-color: #e0a800;
+            }
+
+        #resultText {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        #sumResult {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* Latest results container */
+        #latestResults {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+            #latestResults h5 {
+                margin-bottom: 10px;
+                font-weight: 600;
+                color: white;
+            }
+
+        .result-badge {
+            display: inline-block;
+            color: white;
+            padding: 8px 14px;
+            margin: 0 5px 5px 0;
+            border-radius: 20px;
+            font-weight: 600;
+            user-select: none;
+            min-width: 45px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transition: background-color 0.3s ease;
+        }
+
+            .result-badge.tai {
+
+            }
+
+            .result-badge.xiu {
+                
+            }
+
+            .result-badge.hoa {
+                background-color: #e9ecef;
+                color: #212529;
+            }
+
+            .result-badge.win {
+                background-color: #28a745 !important;
+                color: white;
+                box-shadow: 0 0 8px #28a745aa;
+            }
+
+            .result-badge.lose {
+                background-color: #dc3545 !important;
+                color: white;
+                box-shadow: 0 0 8px #dc3545aa;
+            }
+
+            .result-badge.draw {
+                background-color: #e9ecef !important;
+                color: #212529;
+                box-shadow: none;
+            }
+    </style>
 </head>
 <body>
-	<div class="main-layout">
-		<!-- Sidebar -->
-		<aside class="sidebar">
-			<div class="user-card" id="user1">
-				<h4>User 1</h4>
-				<p>Balance: $120</p>
-				<p class="status">Ready</p>
-				<p class="status">Win</p>
-			</div>
-			<div class="user-card" id="user2">
-				<h4>User 2</h4>
-				<p>Balance: $85</p>
-				<p class="status">Ready</p>
-				<p class="status">Lose</p>
-			</div>
-			<div class="user-card" id="user3">
-				<h4>User 3</h4>
-				<p>Balance: $95</p>
-				<p class="status">Not Ready</p>
-				<p class="status">Lose</p>
-			</div>
-			<div class="user-card" id="user3">
-				<h4>User 4</h4>
-				<p>Balance: $95</p>
-				<p class="status">Not Ready</p>
-				<p class="status">Lose</p>
-				<button class="readyBtn">Ready</button>
-				<br/>
-				<a href="/Home/Index">Quit</a>
-			</div>
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-card" id="user1">
+                <h4>Bạn</h4>
+                <p>Số dư: <span id="balance">$100</span></p>
+            </div>
+            <a href="/Home/Index">Thoát</a>
+        </aside>
 
-		</aside>
+        <section class="game-section">
+            <div class="dice-wrapper">
+                <div class="containerD" id="dice1"></div>
+                <div class="containerD" id="dice2"></div>
+                <div class="containerD" id="dice3"></div>
+            </div>
 
-		<!-- Game Section -->
-		<section class="game-section">
-			<div class="dice-wrapper">
-				<!-- Dice containers: dice1, dice2, dice3 -->
-				<div class="containerD" id="dice1">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-				</div>
-				<div class="containerD" id="dice2">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-				</div>
-				<div class="containerD" id="dice3">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
-					</div>
-				</div>
-			</div>
-			<!-- Prediction Buttons -->
-			<div class="prediction-buttons">
-				<button class="predict-btn" data-value="1">1</button>
-				<button class="predict-btn" data-value="2">2</button>
-				<button class="predict-btn" data-value="3">3</button>
-				<button class="predict-btn" data-value="4">4</button>
-				<button class="predict-btn" data-value="5">5</button>
-				<button class="predict-btn" data-value="6">6</button>
-			</div>
-			<button class="btn" id="spinBtn">Spin</button>
-			<p id="resultText"></p>
-			<div class="bgeffect" id="bgeffect"></div>
-			<!-- Result Display -->
-			<div class="result" id="resultText"></div>
-		</section>
-	</div>
-	<script>
-		const btn = document.querySelector(".btn");
-		const efx = document.querySelector(".bgeffect");
-		const diceContainers = [
-			document.querySelector("#dice1"),
-			document.querySelector("#dice2"),
-			document.querySelector("#dice3")
-		];
-		const predictButtons = document.querySelectorAll(".predict-btn");
-		const resultDiv = document.getElementById("resultText");
+            <div id="latestResults" class="text-center">
+                <h5>6 Lần Kết Quả Mới Nhất</h5>
+                <div id="resultsContainer"></div>
+            </div>
 
-		let userPrediction = null;
+            <div class="prediction-buttons">
+                <button class="predict-btn" data-value="xiu">Xỉu (4-10)</button>
+                <button class="predict-btn" data-value="tai">Tài (11-17)</button>
+            </div>
 
-		// Rotation positions
-		const rotations = {
-			4: [0, 0],
-			3: [0, 180],
-			2: [0, 90],
-			1: [0, -90],
-			5: [-90, 0],
-			6: [90, 0]
-		};
+            <button class="btn" id="spinBtn">Lắc Xúc Xắc</button>
+            <p id="resultText"></p>
+            <p id="sumResult"></p>
+        </section>
+    </div>
 
-		// Choose prediction
-		predictButtons.forEach(btn => {
-			btn.addEventListener("click", () => {
-				userPrediction = parseInt(btn.dataset.value);
-				predictButtons.forEach(b => b.style.backgroundColor = "");
-				btn.style.backgroundColor = "#aaffaa"; // highlight selected
-			});
-		});
+    <script>
+        const spinBtn = document.getElementById("spinBtn");
+        const resultText = document.getElementById("resultText");
+        const sumResult = document.getElementById("sumResult");
+        const balanceText = document.getElementById("balance");
+        const predictButtons = document.querySelectorAll(".predict-btn");
+        const diceDivs = [document.getElementById("dice1"), document.getElementById("dice2"), document.getElementById("dice3")];
+        const resultsContainer = document.getElementById("resultsContainer");
 
-		// Spin dice and check result
-		btn.addEventListener("click", () => {
-			if (!userPrediction) {
-				resultDiv.textContent = "Please choose a number to predict.";
-				return;
-			}
+        let prediction = null;
+        let balance = 100;
+        let latestResults = [];
 
-			let results = [];
+        predictButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                prediction = btn.dataset.value;
+                predictButtons.forEach(b => b.style.backgroundColor = "");
+                btn.style.backgroundColor = "#8f8";
+            });
+        });
 
-			diceContainers.forEach((dice, index) => {
-				const rolled = Math.floor(Math.random() * 6) + 1;
-				const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
-				const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
-				const [rx, ry] = rotations[rolled];
+        function rollDice() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
 
-				dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
-				results.push(rolled);
-			});
+        function updateLatestResults(newResult) {
+            latestResults.unshift(newResult);
+            if (latestResults.length > 6) {
+                latestResults.pop();
+            }
 
-			const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
-			efx.style.backgroundColor = randomColor;
-			btn.style.backgroundColor = randomColor;
-			btn.textContent = "Rolling...";
+            resultsContainer.innerHTML = "";
 
-			// Show result after 1 second
-			setTimeout(() => {
-				btn.textContent = "Spin";
+            latestResults.forEach(r => {
+                const span = document.createElement("span");
+                span.classList.add("result-badge");
 
-				const correctCount = results.filter(num => num === userPrediction).length;
+                span.classList.add(r.result);
 
-				let message = `Rolled: ${results.join(", ")} — `;
-				if (correctCount === 0) {
-					message += "❌ Incorrect.";
-				} else {
-					message += `✅ ${correctCount} correct${correctCount > 1 ? "s" : ""}!`;
-				}
+                if (r.result === 'hoa') {
+                    span.classList.add("draw");
+                } else if (r.prediction === r.result) {
+                    span.classList.add("win");
+                } else {
+                    span.classList.add("lose");
+                }
 
-				resultDiv.textContent = message;
-			}, 1000);
+                span.textContent = `${r.sum} (${r.result.toUpperCase()})`;
+                resultsContainer.appendChild(span);
+            });
+        }
 
-		});
-	</script>
+        spinBtn.addEventListener("click", () => {
+            if (!prediction) {
+                resultText.textContent = "Vui lòng chọn Tài hoặc Xỉu để cược.";
+                return;
+            }
+
+            const dice = [rollDice(), rollDice(), rollDice()];
+            const sum = dice.reduce((a, b) => a + b, 0);
+
+            // Hiển thị số xúc xắc
+            diceDivs.forEach((div, i) => {
+                div.textContent = `🎲 ${dice[i]}`;
+            });
+
+            sumResult.textContent = `Tổng: ${sum}`;
+
+            const result = (sum >= 11 && sum <= 17) ? "tai" :
+                (sum >= 4 && sum <= 10) ? "xiu" : "hoa";
+
+            if (result === prediction) {
+                resultText.textContent = "✅ You Won!";
+                balance += 10;
+            } else if (result === 'hoa') {
+                resultText.textContent = "Draw!";
+            } else {
+                resultText.textContent = "❌ You Lost!";
+                balance -= 10;
+            }
+
+            balanceText.textContent = `$${balance}`;
+
+            updateLatestResults({ sum, result, prediction });
+        });
+    </script>
 </body>
-
 </html>
