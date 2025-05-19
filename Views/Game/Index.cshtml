@@ -6,16 +6,16 @@ Layout = "_GameLayout";
 <html>
 <head>
     <title>Game Tài Xỉu</title>
-   
     <link rel="stylesheet" href="~/css/SicBo.css" asp-append-version="true" />
 
 
 </head>
 <body>
-    <h2>Chào mừng đến với phòng: @ViewBag.RoomName</h2>
+
     <div class="main-layout">
         <!-- Sidebar -->
         <aside class="sidebar">
+            <h2>Chào mừng đến với phòng: @ViewBag.RoomName</h2>
             <div class="user-card" id="user1">
                 <h4>Bạn</h4>
                 <p>Số dư: <span id="balance">$100</span></p>
@@ -25,16 +25,16 @@ Layout = "_GameLayout";
 
         <section class="game-section">
             <div class="dice-wrapper">
-                <div class="containerD" id="dice1"></div>
-                <div class="containerD" id="dice2"></div>
-                <div class="containerD" id="dice3"></div>
+                <div class="containerD" id="dice1">🎲</div>
+                <div class="containerD" id="dice2">🎲</div>
+                <div class="containerD" id="dice3">🎲</div>
             </div>
-
-            <div id="latestResults" class="text-center">
-                <h5>6 Lần Kết Quả Mới Nhất</h5>
-                <div id="resultsContainer"></div>
-            </div>
-
+            
+                <div id="latestResults" class="text-center p-3 border mb-3">
+                    <h3>8 Lần Kết Quả Mới Nhất</h3>
+                    <div id="resultsContainer"></div>
+                </div>
+           
             <div class="prediction-buttons">
                 <button class="predict-btn" data-value="xiu">Xỉu (4-10)</button>
                 <button class="predict-btn" data-value="tai">Tài (11-17)</button>
@@ -73,7 +73,7 @@ Layout = "_GameLayout";
 
         function updateLatestResults(newResult) {
             latestResults.unshift(newResult);
-            if (latestResults.length > 6) {
+            if (latestResults.length > 8) {
                 latestResults.pop();
             }
 
@@ -109,7 +109,7 @@ Layout = "_GameLayout";
 
             // Hiển thị số xúc xắc
             diceDivs.forEach((div, i) => {
-                div.textContent = `🎲 ${dice[i]}`;
+                div.textContent = ` 🎲 ${dice[i]}`;
             });
 
             sumResult.textContent = `Tổng: ${sum}`;

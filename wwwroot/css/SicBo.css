@@ -1,5 +1,4 @@
-﻿
-body {
+﻿body {
     background: #343a40;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -10,18 +9,14 @@ body {
 }
 
 .sidebar {
-    background: #343a40;
+    background: black;
     color: white;
     padding: 20px;
-    width: 250px;
+    width: 350px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
 }
 
-    .sidebar .user-card h4 {
-        font-weight: 700;
-    }
 
     .sidebar a {
         color: #adb5bd;
@@ -38,7 +33,7 @@ body {
 .game-section {
     flex-grow: 1;
     padding: 40px;
-    background: #343a40;
+/*    background: #343a40;*/
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -137,9 +132,9 @@ body {
     text-align: center;
 }
 
-    #latestResults h5 {
+    #latestResults h3 {
         margin-bottom: 10px;
-        font-weight: 600;
+        font-weight: bold;
         color: white;
     }
 
@@ -153,12 +148,9 @@ body {
     user-select: none;
     min-width: 45px;
     text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     transition: background-color 0.3s ease;
 }
-
-    .result-badge.tai {
-    }
 
     .result-badge.hoa {
         background-color: #e9ecef;
