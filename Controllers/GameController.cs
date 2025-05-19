@@ -14,5 +14,9 @@ namespace EIUBetApp.Controllers
         {
             return View();
         }
+        public IActionResult BauCua()
+        {
+            return View();
+        }
     }
 }
