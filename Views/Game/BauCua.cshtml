@@ -157,11 +157,14 @@
 		});
 
 		// Spin dice and check result
-		btn.addEventListener("click", () => {
+				btn.addEventListener("click", () => {
 			if (!userPrediction) {
 				resultDiv.textContent = "Please choose a number to predict.";
 				return;
 			}
+
+			// Disable spin button to prevent multiple clicks
+			btn.disabled = true;
 
 			let results = [];
 
@@ -180,35 +183,32 @@
 			btn.style.backgroundColor = randomColor;
 			btn.textContent = "Rolling...";
 
-			// Show result after 1 second
-					setTimeout(() => {
-			btn.textContent = "Spin";
+			setTimeout(() => {
+				btn.textContent = "Spin";
+				btn.disabled = false; // Enable button again
 
-			const correctCount = results.filter(num => num === userPrediction).length;
+				const correctCount = results.filter(num => num === userPrediction).length;
 
-			// Chuyển số thành tên con vật
-			const nameMap = {
-				1: "Bầu",
-				2: "Nai",
-				3: "Cua",
-				4: "Cá",
-				5: "Tôm",
-				6: "Gà"
-			};
+				const nameMap = {
+					1: "Bầu",
+					2: "Nai",
+					3: "Cua",
+					4: "Cá",
+					5: "Tôm",
+					6: "Gà"
+				};
 
-			const resultNames = results.map(num => nameMap[num]);
+				const resultNames = results.map(num => nameMap[num]);
 
-			let message = `Ra: ${resultNames.join(", ")} — `;
-			if (correctCount === 0) {
-				message += "❌ Không trúng.";
-			} else {
-				message += `✅ Trúng ${correctCount} lần!`;
-			}
+				let message = `Ra: ${resultNames.join(", ")} — `;
+				if (correctCount === 0) {
+					message += "❌ Không trúng.";
+				} else {
+					message += `✅ Trúng ${correctCount} lần!`;
+				}
 
-			resultDiv.textContent = message;
-		}, 1000);
-
-
+				resultDiv.textContent = message;
+			}, 1000);
 		});
 	</script>
 </body>
