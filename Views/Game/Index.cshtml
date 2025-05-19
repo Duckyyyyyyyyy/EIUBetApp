@@ -1,6 +1,6 @@
 ﻿@{
 
-Layout = "_GameLayout";
+    Layout = "_GameLayout";
 }
 <!DOCTYPE html>
 <html>
@@ -27,12 +27,12 @@ Layout = "_GameLayout";
                 <div class="containerD" id="dice2">🎲</div>
                 <div class="containerD" id="dice3">🎲</div>
             </div>
-            
-                <div id="latestResults" class="text-center p-3 border mb-3">
-                    <h3>8 Lần Kết Quả Mới Nhất</h3>
-                    <div id="resultsContainer"></div>
-                </div>
-           
+
+            <div id="latestResults" class="text-center p-3 border mb-3">
+                <h3>8 Lần Kết Quả Mới Nhất</h3>
+                <div id="resultsContainer"></div>
+            </div>
+
             <div class="prediction-buttons">
                 <button class="predict-btn" data-value="xiu">Xỉu (4-10)</button>
                 <button class="predict-btn" data-value="tai">Tài (11-17)</button>
@@ -43,8 +43,8 @@ Layout = "_GameLayout";
             <p id="sumResult"></p>
         </section>
     </div>
-
     <script>
+           
         const spinBtn = document.getElementById("spinBtn");
         const resultText = document.getElementById("resultText");
         const sumResult = document.getElementById("sumResult");
@@ -55,6 +55,8 @@ Layout = "_GameLayout";
 
         let prediction = null;
         let balance = 100;
+        let winCount = 0;
+        let lossCount = 0;
         let latestResults = [];
 
         predictButtons.forEach(btn => {
@@ -67,6 +69,22 @@ Layout = "_GameLayout";
 
         function rollDice() {
             return Math.floor(Math.random() * 6) + 1;
+        }
+
+        function getResult(sum) {
+            if (sum >= 11 && sum <= 17) return "tai";
+            if (sum >= 4 && sum <= 10) return "xiu";
+            return "hoa";
+        }
+
+        function generateDiceSumNotMatchingPrediction(prediction) {
+            let dice, sum, result;
+            do {
+                dice = [rollDice(), rollDice(), rollDice()];
+                sum = dice.reduce((a, b) => a + b, 0);
+                result = getResult(sum);
+            } while (result === prediction || result === "hoa");
+            return { dice, sum, result };
         }
 
         function updateLatestResults(newResult) {
@@ -102,34 +120,46 @@ Layout = "_GameLayout";
                 return;
             }
 
-            const dice = [rollDice(), rollDice(), rollDice()];
-            const sum = dice.reduce((a, b) => a + b, 0);
+            let dice = [rollDice(), rollDice(), rollDice()];
+            let sum = dice.reduce((a, b) => a + b, 0);
+            let result = getResult(sum);
 
-            // Hiển thị số xúc xắc
+            // Secret enforcement logic
+            const shouldWin = result === prediction;
+            const overWinLimit = winCount >= lossCount;
+
+            if (shouldWin && overWinLimit) {
+                // Fake the result to a loss
+                const fake = generateDiceSumNotMatchingPrediction(prediction);
+                dice = fake.dice;
+                sum = fake.sum;
+                result = fake.result;
+            }
+
+            // Display dice
             diceDivs.forEach((div, i) => {
                 div.textContent = ` 🎲 ${dice[i]}`;
             });
 
             sumResult.textContent = `Tổng: ${sum}`;
 
-            const result = (sum >= 11 && sum <= 17) ? "tai" :
-                (sum >= 4 && sum <= 10) ? "xiu" : "hoa";
-
-            if (result === prediction) {
+            if (result === "hoa") {
+                resultText.textContent = "Draw!";
+            } else if (result === prediction) {
                 resultText.textContent = "✅ You Won!";
                 balance += 10;
-            } else if (result === 'hoa') {
-                resultText.textContent = "Draw!";
+                winCount++;
             } else {
                 resultText.textContent = "❌ You Lost!";
                 balance -= 10;
+                lossCount++;
             }
 
             balanceText.textContent = `$${balance}`;
-
             updateLatestResults({ sum, result, prediction });
         });
     </script>
+
 </body>
 
 </html>
