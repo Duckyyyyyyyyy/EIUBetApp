@@ -10,8 +10,9 @@ namespace EIUBetApp.Controllers
         {
             _context = context;
         }
-        public IActionResult Index()
+        public IActionResult Index(string room)
         {
+            ViewBag.RoomName = room;
             return View();
         }
         public IActionResult BauCua()
