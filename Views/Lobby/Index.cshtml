@@ -89,9 +89,10 @@
 			  friendsList.appendChild(friendDiv);
 		  });
 
-		  function joinRoom(name) {
-			  alert(`Joining ${name}...`);
-		  }
+		function joinRoom(name) {
+			window.location.href = `/Game/Index?room=${encodeURIComponent(name)}`;
+		}
+
 
 		  function invite(username) {
 			  alert(`Inviting ${username} to a room...`);

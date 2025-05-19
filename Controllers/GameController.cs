@@ -15,8 +15,9 @@ namespace EIUBetApp.Controllers
             ViewBag.RoomName = room;
             return View();
         }
-        public IActionResult BauCua()
+        public IActionResult BauCua(string room)
         {
+            ViewBag.RoomName = room;
             return View();
         }
     }
