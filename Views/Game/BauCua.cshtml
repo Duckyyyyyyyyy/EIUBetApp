@@ -6,6 +6,7 @@
 <head>
 	<title>3D Dice Game</title>
 	<link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+	
 </head>
 <body>
 	<div class="main-layout">
@@ -46,56 +47,75 @@
 			<div class="dice-wrapper">
 				<!-- Dice containers: dice1, dice2, dice3 -->
 				<div class="containerD" id="dice1">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
 					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ca.png" alt="ca.png" />
 					</div>
 					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/tom.png" alt="tom.png" />
 					</div>
 					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ga.png" alt="ga.png" />
 					</div>
+					
 				</div>
 				<div class="containerD" id="dice2">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
 					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ca.png" alt="ca.png" />
 					</div>
 					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/tom.png" alt="tom.png" />
 					</div>
 					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ga.png" alt="ga.png" />
 					</div>
 				</div>
 				<div class="containerD" id="dice3">
-					<div class="left"><span class="dot"></span></div>
-					<div class="right"><span class="dot"></span><span class="dot"></span></div>
-					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
 					<div class="back">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ca.png" alt="ca.png" />
 					</div>
 					<div class="up">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/tom.png" alt="tom.png" />
 					</div>
 					<div class="down">
-						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+						<img src="~/Assets/ga.png" alt="ga.png" />
 					</div>
 				</div>
 			</div>
 			<!-- Prediction Buttons -->
 			<div class="prediction-buttons">
-				<button class="predict-btn" data-value="1">1</button>
-				<button class="predict-btn" data-value="2">2</button>
-				<button class="predict-btn" data-value="3">3</button>
-				<button class="predict-btn" data-value="4">4</button>
-				<button class="predict-btn" data-value="5">5</button>
-				<button class="predict-btn" data-value="6">6</button>
+				<button class="predict-btn" data-value="1">Bầu</button>
+				<button class="predict-btn" data-value="2">Nai</button>
+				<button class="predict-btn" data-value="3">Cua</button>
+				<button class="predict-btn" data-value="4">Cá</button>
+				<button class="predict-btn" data-value="5">Tôm</button>
+				<button class="predict-btn" data-value="6">gà</button>
 			</div>
 			<button class="btn" id="spinBtn">Spin</button>
 			<p id="resultText"></p>
@@ -161,20 +181,33 @@
 			btn.textContent = "Rolling...";
 
 			// Show result after 1 second
-			setTimeout(() => {
-				btn.textContent = "Spin";
+					setTimeout(() => {
+			btn.textContent = "Spin";
 
-				const correctCount = results.filter(num => num === userPrediction).length;
+			const correctCount = results.filter(num => num === userPrediction).length;
 
-				let message = `Rolled: ${results.join(", ")} — `;
-				if (correctCount === 0) {
-					message += "❌ Incorrect.";
-				} else {
-					message += `✅ ${correctCount} correct${correctCount > 1 ? "s" : ""}!`;
-				}
+			// Chuyển số thành tên con vật
+			const nameMap = {
+				1: "Bầu",
+				2: "Nai",
+				3: "Cua",
+				4: "Cá",
+				5: "Tôm",
+				6: "Gà"
+			};
 
-				resultDiv.textContent = message;
-			}, 1000);
+			const resultNames = results.map(num => nameMap[num]);
+
+			let message = `Ra: ${resultNames.join(", ")} — `;
+			if (correctCount === 0) {
+				message += "❌ Không trúng.";
+			} else {
+				message += `✅ Trúng ${correctCount} lần!`;
+			}
+
+			resultDiv.textContent = message;
+		}, 1000);
+
 
 		});
 	</script>
