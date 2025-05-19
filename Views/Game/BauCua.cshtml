@@ -1,0 +1,183 @@
+﻿@{
+	Layout = "_GameLayout";
+}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>3D Dice Game</title>
+	<link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+</head>
+<body>
+	<div class="main-layout">
+		<!-- Sidebar -->
+		<aside class="sidebar">
+			<div class="user-card" id="user1">
+				<h4>User 1</h4>
+				<p>Balance: $120</p>
+				<p class="status">Ready</p>
+				<p class="status">Win</p>
+			</div>
+			<div class="user-card" id="user2">
+				<h4>User 2</h4>
+				<p>Balance: $85</p>
+				<p class="status">Ready</p>
+				<p class="status">Lose</p>
+			</div>
+			<div class="user-card" id="user3">
+				<h4>User 3</h4>
+				<p>Balance: $95</p>
+				<p class="status">Not Ready</p>
+				<p class="status">Lose</p>
+			</div>
+			<div class="user-card" id="user3">
+				<h4>User 4</h4>
+				<p>Balance: $95</p>
+				<p class="status">Not Ready</p>
+				<p class="status">Lose</p>
+				<button class="readyBtn">Ready</button>
+				<br/>
+				<a href="/Home/Index">Quit</a>
+			</div>
+
+		</aside>
+
+		<!-- Game Section -->
+		<section class="game-section">
+			<div class="dice-wrapper">
+				<!-- Dice containers: dice1, dice2, dice3 -->
+				<div class="containerD" id="dice1">
+					<div class="left"><span class="dot"></span></div>
+					<div class="right"><span class="dot"></span><span class="dot"></span></div>
+					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="back">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="up">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="down">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+				</div>
+				<div class="containerD" id="dice2">
+					<div class="left"><span class="dot"></span></div>
+					<div class="right"><span class="dot"></span><span class="dot"></span></div>
+					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="back">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="up">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="down">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+				</div>
+				<div class="containerD" id="dice3">
+					<div class="left"><span class="dot"></span></div>
+					<div class="right"><span class="dot"></span><span class="dot"></span></div>
+					<div class="front"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+					<div class="back">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="up">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					<div class="down">
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+				</div>
+			</div>
+			<!-- Prediction Buttons -->
+			<div class="prediction-buttons">
+				<button class="predict-btn" data-value="1">1</button>
+				<button class="predict-btn" data-value="2">2</button>
+				<button class="predict-btn" data-value="3">3</button>
+				<button class="predict-btn" data-value="4">4</button>
+				<button class="predict-btn" data-value="5">5</button>
+				<button class="predict-btn" data-value="6">6</button>
+			</div>
+			<button class="btn" id="spinBtn">Spin</button>
+			<p id="resultText"></p>
+			<div class="bgeffect" id="bgeffect"></div>
+			<!-- Result Display -->
+			<div class="result" id="resultText"></div>
+		</section>
+	</div>
+	<script>
+		const btn = document.querySelector(".btn");
+		const efx = document.querySelector(".bgeffect");
+		const diceContainers = [
+			document.querySelector("#dice1"),
+			document.querySelector("#dice2"),
+			document.querySelector("#dice3")
+		];
+		const predictButtons = document.querySelectorAll(".predict-btn");
+		const resultDiv = document.getElementById("resultText");
+
+		let userPrediction = null;
+
+		// Rotation positions
+		const rotations = {
+			4: [0, 0],
+			3: [0, 180],
+			2: [0, 90],
+			1: [0, -90],
+			5: [-90, 0],
+			6: [90, 0]
+		};
+
+		// Choose prediction
+		predictButtons.forEach(btn => {
+			btn.addEventListener("click", () => {
+				userPrediction = parseInt(btn.dataset.value);
+				predictButtons.forEach(b => b.style.backgroundColor = "");
+				btn.style.backgroundColor = "#aaffaa"; // highlight selected
+			});
+		});
+
+		// Spin dice and check result
+		btn.addEventListener("click", () => {
+			if (!userPrediction) {
+				resultDiv.textContent = "Please choose a number to predict.";
+				return;
+			}
+
+			let results = [];
+
+			diceContainers.forEach((dice, index) => {
+				const rolled = Math.floor(Math.random() * 6) + 1;
+				const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
+				const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
+				const [rx, ry] = rotations[rolled];
+
+				dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
+				results.push(rolled);
+			});
+
+			const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+			efx.style.backgroundColor = randomColor;
+			btn.style.backgroundColor = randomColor;
+			btn.textContent = "Rolling...";
+
+			// Show result after 1 second
+			setTimeout(() => {
+				btn.textContent = "Spin";
+
+				const correctCount = results.filter(num => num === userPrediction).length;
+
+				let message = `Rolled: ${results.join(", ")} — `;
+				if (correctCount === 0) {
+					message += "❌ Incorrect.";
+				} else {
+					message += `✅ ${correctCount} correct${correctCount > 1 ? "s" : ""}!`;
+				}
+
+				resultDiv.textContent = message;
+			}, 1000);
+
+		});
+	</script>
+</body>
+
+</html>
