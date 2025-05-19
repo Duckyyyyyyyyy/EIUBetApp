@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login Site</title>
+   
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .form-container {
+            max-width: 400px;
+            margin: 5% auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="signin-tab" data-bs-toggle="tab" data-bs-target="#signin"
+                        type="button" role="tab">
+                    Sign In
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button"
+                        role="tab">
+                    Sign Up
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="authTabsContent">
+            <!-- Sign In -->
+            <div class="tab-pane fade show active" id="signin" role="tabpanel">
+                <form id="signInForm">
+                    <div class="mb-3">
+                        <label for="signinUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="signinUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signinPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signinPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                </form>
+            </div>
+
+            <!-- Sign Up -->
+            <div class="tab-pane fade" id="signup" role="tabpanel">
+                <form id="signUpForm">
+                    <div class="mb-3">
+                        <label for="signupUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="signupUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signupPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupPhone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="signupPhone" pattern="\\d{10}"
+                               placeholder="10-digit number" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
