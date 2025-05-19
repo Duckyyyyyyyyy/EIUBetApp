@@ -43,7 +43,56 @@
             <p id="sumResult"></p>
         </section>
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
+                let prediction = null;
+        let balance = 100;
+
+        $(".predict-btn").click(function () {
+            prediction = $(this).data("value");
+            $(".predict-btn").css("background-color", "");
+            $(this).css("background-color", "#8f8");
+        });
+
+        $("#spinBtn").click(function () {
+            if (!prediction) {
+                $("#resultText").text("Vui lòng chọn Tài hoặc Xỉu để cược.");
+                return;
+            }
+
+            $.ajax({
+                url: '/Game/Spin',
+                type: 'POST',
+                data: { prediction: prediction },
+                success: function (data) {
+                    // Update dice
+                    for (let i = 0; i < 3; i++) {
+                        $("#dice" + (i + 1)).text(" 🎲 " + data.dice[i]);
+                    }
+
+                    $("#sumResult").text("Tổng: " + data.sum);
+
+                    if (data.result === "hoa") {
+                        $("#resultText").text("Draw!");
+                    } else if (data.result === prediction) {
+                        $("#resultText").text("✅ You Won!");
+                    } else {
+                        $("#resultText").text("❌ You Lost!");
+                    }
+
+                    balance = data.balance;
+                    $("#balance").text("$" + balance);
+                  
+                },
+                error: function () {
+                    $("#resultText").text("Lỗi kết nối với server.");
+                }
+            });
+        });
+
+    </script>
+    @* <script>
            
         const spinBtn = document.getElementById("spinBtn");
         const resultText = document.getElementById("resultText");
@@ -158,7 +207,7 @@
             balanceText.textContent = `$${balance}`;
             updateLatestResults({ sum, result, prediction });
         });
-    </script>
+    </script> *@
 
 </body>
 
