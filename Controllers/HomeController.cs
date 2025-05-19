@@ -19,12 +19,8 @@ namespace EIUBetApp.Controllers
 
         public IActionResult Index()
         {
-            var user = _context.User.ToList();
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
+          
+            return View();
         }
        
         public IActionResult Privacy()
