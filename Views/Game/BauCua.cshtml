@@ -1,0 +1,216 @@
+﻿@{
+	Layout = "_GameLayout";
+}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>3D Dice Game</title>
+	<link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+	
+</head>
+<body>
+	<div class="main-layout">
+		<!-- Sidebar -->
+		<aside class="sidebar">
+			<div class="user-card" id="user1">
+				<h4>User 1</h4>
+				<p>Balance: $120</p>
+				<p class="status">Ready</p>
+				<p class="status">Win</p>
+			</div>
+			<div class="user-card" id="user2">
+				<h4>User 2</h4>
+				<p>Balance: $85</p>
+				<p class="status">Ready</p>
+				<p class="status">Lose</p>
+			</div>
+			<div class="user-card" id="user3">
+				<h4>User 3</h4>
+				<p>Balance: $95</p>
+				<p class="status">Not Ready</p>
+				<p class="status">Lose</p>
+			</div>
+			<div class="user-card" id="user3">
+				<h4>User 4</h4>
+				<p>Balance: $95</p>
+				<p class="status">Not Ready</p>
+				<p class="status">Lose</p>
+				<button class="readyBtn">Ready</button>
+				<br />
+				<a href="/Home/Index">Quit</a>
+			</div>
+
+		</aside>
+
+		<!-- Game Section -->
+		<section class="game-section">
+			<div class="dice-wrapper">
+				<!-- Dice containers: dice1, dice2, dice3 -->
+				<div class="containerD" id="dice1">
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
+					<div class="back">
+						<img src="~/Assets/ca.png" alt="ca.png" />
+					</div>
+					<div class="up">
+						<img src="~/Assets/tom.png" alt="tom.png" />
+					</div>
+					<div class="down">
+						<img src="~/Assets/ga.png" alt="ga.png" />
+					</div>
+					
+				</div>
+				<div class="containerD" id="dice2">
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
+					<div class="back">
+						<img src="~/Assets/ca.png" alt="ca.png" />
+					</div>
+					<div class="up">
+						<img src="~/Assets/tom.png" alt="tom.png" />
+					</div>
+					<div class="down">
+						<img src="~/Assets/ga.png" alt="ga.png" />
+					</div>
+				</div>
+				<div class="containerD" id="dice3">
+					<div class="left">
+						<img src="~/Assets/bau.png" alt="bau.png" />
+					</div>
+					<div class="right">
+						<img src="~/Assets/nai.png" alt="nai.png" />
+					</div>
+					<div class="front">
+						<img src="~/Assets/cua.png" alt="cua.png" />
+					</div>
+					<div class="back">
+						<img src="~/Assets/ca.png" alt="ca.png" />
+					</div>
+					<div class="up">
+						<img src="~/Assets/tom.png" alt="tom.png" />
+					</div>
+					<div class="down">
+						<img src="~/Assets/ga.png" alt="ga.png" />
+					</div>
+				</div>
+			</div>
+			<!-- Prediction Buttons -->
+			<div class="prediction-buttons">
+				<button class="predict-btn" data-value="1">Bầu</button>
+				<button class="predict-btn" data-value="2">Nai</button>
+				<button class="predict-btn" data-value="3">Cua</button>
+				<button class="predict-btn" data-value="4">Cá</button>
+				<button class="predict-btn" data-value="5">Tôm</button>
+				<button class="predict-btn" data-value="6">gà</button>
+			</div>
+			<button class="btn" id="spinBtn">Spin</button>
+			<p id="resultText"></p>
+			<div class="bgeffect" id="bgeffect"></div>
+			<!-- Result Display -->
+			<div class="result" id="resultText"></div>
+		</section>
+	</div>
+	<script>
+		const btn = document.querySelector(".btn");
+		const efx = document.querySelector(".bgeffect");
+		const diceContainers = [
+			document.querySelector("#dice1"),
+			document.querySelector("#dice2"),
+			document.querySelector("#dice3")
+		];
+		const predictButtons = document.querySelectorAll(".predict-btn");
+		const resultDiv = document.getElementById("resultText");
+
+		let userPrediction = null;
+
+		// Rotation positions
+		const rotations = {
+			4: [0, 0],
+			3: [0, 180],
+			2: [0, 90],
+			1: [0, -90],
+			5: [-90, 0],
+			6: [90, 0]
+		};
+
+		// Choose prediction
+		predictButtons.forEach(btn => {
+			btn.addEventListener("click", () => {
+				userPrediction = parseInt(btn.dataset.value);
+				predictButtons.forEach(b => b.style.backgroundColor = "");
+				btn.style.backgroundColor = "#aaffaa"; // highlight selected
+			});
+		});
+
+		// Spin dice and check result
+				btn.addEventListener("click", () => {
+			if (!userPrediction) {
+				resultDiv.textContent = "Please choose a number to predict.";
+				return;
+			}
+
+			// Disable spin button to prevent multiple clicks
+			btn.disabled = true;
+
+			let results = [];
+
+			diceContainers.forEach((dice, index) => {
+				const rolled = Math.floor(Math.random() * 6) + 1;
+				const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
+				const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
+				const [rx, ry] = rotations[rolled];
+
+				dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
+				results.push(rolled);
+			});
+
+			const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+			efx.style.backgroundColor = randomColor;
+			btn.style.backgroundColor = randomColor;
+			btn.textContent = "Rolling...";
+
+			setTimeout(() => {
+				btn.textContent = "Spin";
+				btn.disabled = false; // Enable button again
+
+				const correctCount = results.filter(num => num === userPrediction).length;
+
+				const nameMap = {
+					1: "Bầu",
+					2: "Nai",
+					3: "Cua",
+					4: "Cá",
+					5: "Tôm",
+					6: "Gà"
+				};
+
+				const resultNames = results.map(num => nameMap[num]);
+
+				let message = `Ra: ${resultNames.join(", ")} — `;
+				if (correctCount === 0) {
+					message += "❌ Không trúng.";
+				} else {
+					message += `✅ Trúng ${correctCount} lần!`;
+				}
+
+				resultDiv.textContent = message;
+			}, 1000);
+		});
+	</script>
+</body>
+
+</html>

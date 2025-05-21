@@ -1,20 +1,25 @@
+using EIUBetApp.Data;
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace EIUBetApp.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        //private readonly ILogger<HomeController> _logger;
+        private readonly EIUBetAppContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController( EIUBetAppContext context)
         {
-            _logger = logger;
+            //_logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
+          
             return View();
         }
        
@@ -22,7 +27,11 @@ namespace EIUBetApp.Controllers
         {
             return View();
         }
-
+        public IActionResult Login()
+        {
+            return View();
+        }
+      
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
