@@ -27,8 +27,12 @@ namespace EIUBetApp.Models
         [Required]
         public bool IsDelete { get; set; }
 
-        // Navigation
+        [Required]
+        public Guid GameId { get; set; }
+
         public Player Player { get; set; }
         public Room Room { get; set; }
+
+        public Game Game { get; set; }
     }
 }

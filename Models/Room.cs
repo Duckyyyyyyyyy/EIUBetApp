@@ -15,9 +15,12 @@ namespace EIUBetApp.Models
 
         [Required]
         public bool IsDelete { get; set; }
+        [Required]
+        public Guid GameId { get; set; }
 
+        public Game Game { get; set; }
         public ICollection<Player> Players { get; set; }
         public ICollection<Logs> Logs { get; set; }
-        public ICollection<RoomManagement> RoomManagements { get; set; }
+        public ICollection<ManageRoom> ManageRooms { get; set; }
     }
 }

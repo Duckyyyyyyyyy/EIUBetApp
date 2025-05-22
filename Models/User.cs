@@ -5,20 +5,21 @@ namespace EIUBetApp.Models
     public class User
     {
         [Key]
+        [Required]
         public Guid UserId { get; set; }
 
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
 
-        [Required]
         [Phone]
         [StringLength(10)]
         public string Phone { get; set; }
 
         [Required]
         [StringLength(255)]
-        public string PasswordHash { get; set; }
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
 
         [Required]
         [EmailAddress]
@@ -26,13 +27,13 @@ namespace EIUBetApp.Models
         public string Email { get; set; }
 
         [Required]
-        public bool IsDeleted { get; set; }
+        public bool IsDelete { get; set; }
 
         [Required]
         public int Role { get; set; }
 
-        public ICollection<Player> Players { get; set; }
-        public Admin Admin { get; set; }
-        public ICollection<RoomManagement> RoomManagements { get; set; }
+        public Player? Player { get; set; }
+        public Admin? Admin { get; set; }
+        public ICollection<ManageRoom> ?RoomManagements { get; set; }
     }
 }

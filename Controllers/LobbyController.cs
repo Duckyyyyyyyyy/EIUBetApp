@@ -1,12 +1,24 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EIUBetApp.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using EIUBetApp.Models;
+
 
 namespace EIUBetApp.Controllers
 {
     public class LobbyController : Controller
     {
-        public IActionResult Index()
+        private readonly EIUBetAppContext _context;
+        public LobbyController(EIUBetAppContext context)
         {
-            return View();
+            _context = context;
+        }
+        public IActionResult Index(Guid gameId)
+        {
+            var players = _context.Player.Include(p => p.User).ToList();
+            var rooms = _context.Room.Where(r => r.GameId == gameId).ToList();
+            var model = new Tuple<IEnumerable<Player>, IEnumerable<Room>>(players, rooms);
+            return View(model);
         }
     }
 }

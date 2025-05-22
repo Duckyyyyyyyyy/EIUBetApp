@@ -1,5 +1,6 @@
 using EIUBetApp.Data;
 using EIUBetApp.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -10,28 +11,57 @@ namespace EIUBetApp.Controllers
     {
         //private readonly ILogger<HomeController> _logger;
         private readonly EIUBetAppContext _context;
+        //private readonly SignInManager<IdentityUser> _signInManager;
 
-        public HomeController( EIUBetAppContext context)
+        public HomeController(EIUBetAppContext context)
         {
-            //_logger = logger;
             _context = context;
+            //_signInManager = signInManager;
         }
 
         public IActionResult Index()
         {
-          
-            return View();
+            var players = (from p in _context.Player
+                           join u in _context.User on p.UserId equals u.UserId
+                           where u.Role == 1
+                           select p).ToList();
+
+
+            return View(players);
         }
-       
+
         public IActionResult Privacy()
         {
             return View();
         }
-        public IActionResult Login()
-        {
-            return View();
-        }
-      
+
+        // Login action
+        //[HttpPost]
+        //public async Task<IActionResult> Login(LoginViewModel model)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        var result = await _signInManager.PasswordSignInAsync(
+        //            model.Email,
+        //            model.Password,
+        //            isPersistent: false,       // set to true if you want "Remember Me"
+        //            lockoutOnFailure: false
+        //        );
+
+        //        if (result.Succeeded)
+        //        {
+        //            return RedirectToAction("Index", "Home");
+        //        }
+        //    }
+        //    return View(model);
+        //}
+
+        //public async Task<IActionResult> Logout()
+        //{
+        //    await _signInManager.SignOutAsync();
+        //    return RedirectToAction("Index", "Home");
+        //}
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
