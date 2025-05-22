@@ -19,19 +19,19 @@ namespace EIUBetApp.Controllers
 
         public IActionResult Index()
         {
-            var user = _context.User.ToList();
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
+          
+            return View();
         }
        
         public IActionResult Privacy()
         {
             return View();
         }
-
+        public IActionResult Login()
+        {
+            return View();
+        }
+      
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
