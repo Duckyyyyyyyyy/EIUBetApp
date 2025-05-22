@@ -4,6 +4,8 @@ namespace EIUBetApp.Models
 {
     public class ManageRoom
     {
+        [Key]
+        public Guid ManageRoomId { get; set; }
         [Required]
         public Guid RoomId { get; set; }
 

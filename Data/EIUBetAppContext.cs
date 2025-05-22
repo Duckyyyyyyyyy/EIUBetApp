@@ -27,8 +27,8 @@ namespace EIUBetApp.Data
                 .HasForeignKey<Admin>(a => a.UserId) // FK is in Admin table
                 .IsRequired();
 
-            modelBuilder.Entity<ManageRoom>()
-                .HasKey(mr => new { mr.RoomId, mr.PlayerId }); // ✅ Composite key defined here
+            //modelBuilder.Entity<ManageRoom>()
+            //    .HasKey(mr => new { mr.RoomId, mr.PlayerId }); // ✅ Composite key defined here
 
             modelBuilder.Entity<ManageRoom>()
                 .HasOne(mr => mr.Room)
@@ -51,8 +51,17 @@ namespace EIUBetApp.Data
                 .WithMany(g => g.Logs)
                 .HasForeignKey(l => l.GameId);
 
+            modelBuilder.Entity<Logs>()
+                .HasOne(l => l.Room)
+                .WithMany(r => r.Logs)
+                .HasForeignKey(l => l.RoomId);
+
+            modelBuilder.Entity<Logs>()
+                .HasOne(l => l.Player)
+                .WithMany()
+                .HasForeignKey(l => l.PlayerId);
+
+
         }
-
-
     }
 }

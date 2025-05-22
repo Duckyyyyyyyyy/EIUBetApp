@@ -21,13 +21,9 @@ namespace EIUBetApp.Controllers
 
         public IActionResult Index()
         {
-            var players = (from p in _context.Player
-                           join u in _context.User on p.UserId equals u.UserId
-                           where u.Role == 1
-                           select p).ToList();
+            var games = _context.Game.ToList();
 
-
-            return View(players);
+            return View(games);
         }
 
         public IActionResult Privacy()

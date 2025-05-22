@@ -6,6 +6,7 @@ namespace EIUBetApp.Models
     public class Player
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid PlayerId { get; set; }
 
         [Required]

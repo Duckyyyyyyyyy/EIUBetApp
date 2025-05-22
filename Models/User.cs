@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EIUBetApp.Models
 {
@@ -6,25 +7,26 @@ namespace EIUBetApp.Models
     {
         [Key]
         [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid UserId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Phone]
         [StringLength(10)]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
         [Required]
         [StringLength(255)]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
         [StringLength(255)]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required]
         public bool IsDelete { get; set; }
@@ -34,6 +36,5 @@ namespace EIUBetApp.Models
 
         public Player? Player { get; set; }
         public Admin? Admin { get; set; }
-        public ICollection<ManageRoom> ?RoomManagements { get; set; }
     }
 }
