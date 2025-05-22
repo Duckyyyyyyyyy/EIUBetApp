@@ -20,7 +20,7 @@ namespace EIUBetApp.Models
 
         [Required]
         public Guid UserId { get; set; }
-        public User ?User { get; set; }
+        public User? User { get; set; }
         public ICollection<ManageRoom>? ManageRooms { get; set; }
     }
 }
