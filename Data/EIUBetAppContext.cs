@@ -12,7 +12,56 @@ namespace EIUBetApp.Data
         public DbSet<Player> Player { get; set; }
         public DbSet<Room> Room { get; set; }
         public DbSet<User> User { get; set; }
-        public DbSet<RoomManagement> RoomManagement { get; set; }
+        public DbSet<ManageRoom> ManageRoom { get; set; }
+        public DbSet<Game> Game { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Player>()
+                 .HasOne(p => p.User).WithOne(u => u.Player)
+                 .HasForeignKey<User>(p => p.UserId).IsRequired();
+
+            modelBuilder.Entity<Admin>()
+                .HasOne(a => a.User)                  // An Admin has one User
+                .WithOne(u => u.Admin)               // A User may have one Admin
+                .HasForeignKey<Admin>(a => a.UserId) // FK is in Admin table
+                .IsRequired();
+
+            //modelBuilder.Entity<ManageRoom>()
+            //    .HasKey(mr => new { mr.RoomId, mr.PlayerId }); // ✅ Composite key defined here
+
+            modelBuilder.Entity<ManageRoom>()
+                .HasOne(mr => mr.Room)
+                .WithMany(r => r.ManageRooms)
+                .HasForeignKey(mr => mr.RoomId);
+
+            modelBuilder.Entity<ManageRoom>()
+                .HasOne(mr => mr.Player)
+                .WithMany(p => p.ManageRooms)
+                .HasForeignKey(mr => mr.PlayerId);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.Game)
+                .WithMany(g => g.Rooms)
+                .HasForeignKey(r => r.GameId);
+
+
+            modelBuilder.Entity<Logs>()
+                .HasOne(l => l.Game)
+                .WithMany(g => g.Logs)
+                .HasForeignKey(l => l.GameId);
+
+            modelBuilder.Entity<Logs>()
+                .HasOne(l => l.Room)
+                .WithMany(r => r.Logs)
+                .HasForeignKey(l => l.RoomId);
+
+            modelBuilder.Entity<Logs>()
+                .HasOne(l => l.Player)
+                .WithMany()
+                .HasForeignKey(l => l.PlayerId);
+
+
+        }
     }
 }
