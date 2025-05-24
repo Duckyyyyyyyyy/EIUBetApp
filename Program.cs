@@ -1,38 +1,46 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using EIUBetApp.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load .env file
+// Load environment variables from .env
 DotNetEnv.Env.Load();
 
-// Read connection string from environment variable
+// Read connection string from environment variables
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
 
-// Add services to the container
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string not found in environment variables.");
+}
+
+// Add MVC services
 builder.Services.AddControllersWithViews();
 
+// Use your existing database
 builder.Services.AddDbContext<EIUBetAppContext>(options =>
     options.UseSqlServer(connectionString));
 
-//builder.Services.AddDefaultIdentity<IdentityUser>()
-//    .AddEntityFrameworkStores<EIUBetAppContext>();
-
+// Add cookie-based authentication (without Identity)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Home/Login";
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Home/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
     });
 
-builder.Services.AddAuthorization();
-
+// Optional: Add SignalR
 builder.Services.AddSignalR();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Middleware pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -41,10 +49,17 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
+
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map SignalR hub
 app.MapHub<EIUBetAppHub>("/bethub");
+
+// Default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

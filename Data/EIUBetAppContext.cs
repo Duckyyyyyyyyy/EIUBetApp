@@ -5,30 +5,31 @@ namespace EIUBetApp.Data
 {
     public class EIUBetAppContext : DbContext
     {
-        public EIUBetAppContext(DbContextOptions<EIUBetAppContext> options) : base(options) { }
+        public EIUBetAppContext(DbContextOptions<EIUBetAppContext> options)
+            : base(options) { }
 
+        public DbSet<User> User { get; set; }
         public DbSet<Admin> Admin { get; set; }
-        public DbSet<Logs> Logs { get; set; }
         public DbSet<Player> Player { get; set; }
         public DbSet<Room> Room { get; set; }
-        public DbSet<User> User { get; set; }
         public DbSet<ManageRoom> ManageRoom { get; set; }
         public DbSet<Game> Game { get; set; }
+        public DbSet<Logs> Logs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure relationships as you already did
             modelBuilder.Entity<Player>()
-                 .HasOne(p => p.User).WithOne(u => u.Player)
-                 .HasForeignKey<User>(p => p.UserId).IsRequired();
+                 .HasOne(p => p.User)
+                 .WithOne(u => u.Player)
+                 .HasForeignKey<Player>(p => p.UserId)
+                 .IsRequired();
 
             modelBuilder.Entity<Admin>()
-                .HasOne(a => a.User)                  // An Admin has one User
-                .WithOne(u => u.Admin)               // A User may have one Admin
-                .HasForeignKey<Admin>(a => a.UserId) // FK is in Admin table
+                .HasOne(a => a.User)
+                .WithOne(u => u.Admin)
+                .HasForeignKey<Admin>(a => a.UserId)
                 .IsRequired();
-
-            //modelBuilder.Entity<ManageRoom>()
-            //    .HasKey(mr => new { mr.RoomId, mr.PlayerId }); // ✅ Composite key defined here
 
             modelBuilder.Entity<ManageRoom>()
                 .HasOne(mr => mr.Room)
@@ -45,7 +46,6 @@ namespace EIUBetApp.Data
                 .WithMany(g => g.Rooms)
                 .HasForeignKey(r => r.GameId);
 
-
             modelBuilder.Entity<Logs>()
                 .HasOne(l => l.Game)
                 .WithMany(g => g.Logs)
@@ -60,8 +60,6 @@ namespace EIUBetApp.Data
                 .HasOne(l => l.Player)
                 .WithMany()
                 .HasForeignKey(l => l.PlayerId);
-
-
         }
     }
 }

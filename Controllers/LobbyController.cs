@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EIUBetApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace EIUBetApp.Controllers
 {
+    [Authorize(Roles = "Player")]
     public class LobbyController : Controller
     {
         private readonly EIUBetAppContext _context;
