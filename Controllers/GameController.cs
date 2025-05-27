@@ -1,5 +1,6 @@
 ﻿using EIUBetApp.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
@@ -10,13 +11,31 @@ namespace EIUBetApp.Controllers
         {
             _context = context;
         }
-        public IActionResult Index(string room)
+      
+        public IActionResult Index()
         {
-            ViewBag.RoomName = room;
+            // Access claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // as string
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var username = User.FindFirstValue("Username");
+            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+
+            // Convert userId to Guid if needed
+            var userGuid = Guid.Parse(userId);
+
+            // You can also query more data from DB using userGuid
+            var player = _context.Player.FirstOrDefault(p => p.UserId == userGuid);
+
+            ViewBag.Username = username;
+            ViewBag.Email = email;
+            ViewBag.Balance = player?.Balance ?? 0;
+            ViewBag.Roles = roles;
             return View();
         }
+
         public IActionResult BauCua(string room)
         {
+
             ViewBag.RoomName = room;
             return View();
         }

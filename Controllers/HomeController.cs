@@ -7,20 +7,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EIUBetApp.Controllers
 {
+    [AllowAnonymous]
     public class HomeController : Controller
     {
         private readonly EIUBetAppContext _context;
-        //private readonly SignInManager<ApplicationUser> _signInManager;
-        //private readonly UserManager<ApplicationUser> _userManager;
 
         public HomeController(EIUBetAppContext context)
         {
             _context = context;
-            //_signInManager = signInManager;
-            //_userManager = userManager;
         }
 
         public IActionResult Index()

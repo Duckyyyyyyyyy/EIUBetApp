@@ -9,10 +9,11 @@ namespace EIUBetApp.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid GameId { get; set; }
 
-        [Required]
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
 
+        //Navigation
         public ICollection<Room> Rooms { get; set; }
         public ICollection<Logs> Logs { get; set; }
 

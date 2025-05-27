@@ -1,40 +1,34 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using EIUBetApp.Models;
+using System.ComponentModel.DataAnnotations;
 
-namespace EIUBetApp.Models
+public class User
 {
-    public class User
-    {
-        [Key]
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid UserId { get; set; }
+    [Key]
+    public Guid UserId { get; set; }  // NOT NULL
 
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
+    [StringLength(30)]
+    public string? Username { get; set; }
 
-        [Phone]
-        [StringLength(10)]
-        public string Phone { get; set; } = string.Empty;
+    [Required]
+    [StringLength(255)]
+    public string Password { get; set; } = string.Empty;  // NOT NULL
 
-        [Required]
-        [StringLength(255)]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+    [Required]
+    [EmailAddress]
+    [StringLength(100)]
+    public string Email { get; set; } = string.Empty;  // NOT NULL
 
-        [Required]
-        [EmailAddress]
-        [StringLength(255)]
-        public string Email { get; set; } = string.Empty;
+    [Phone]
+    [StringLength(20)]
+    public string? Phone { get; set; }  // Nullable in DB
 
-        [Required]
-        public bool IsDelete { get; set; }
+    public bool? IsDeleted { get; set; }  // Nullable in DB
 
-        [Required]
-        public int Role { get; set; }
+    [StringLength(100)]
+    public string? FullName { get; set; }  // Nullable in DB
 
-        public Player? Player { get; set; }
-        public Admin? Admin { get; set; }
-    }
+    //Navigation
+    public Player? Player { get; set; }
+    public Admin? Admin { get; set; }
+    public ICollection<UserRole>? UserRoles { get; set; }
 }

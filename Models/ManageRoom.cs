@@ -18,6 +18,8 @@ namespace EIUBetApp.Models
 
         [DataType(DataType.DateTime)]
         public DateTime? LeaveAt { get; set; }
+
+        //Navigation
         public Room Room { get; set; }
         public Player Player { get; set; }
     }

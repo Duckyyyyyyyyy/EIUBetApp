@@ -1,16 +1,22 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EIUBetApp.Models
 {
-    public class Admin
+    public class UserRole
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid AdminId { get; set; }
+        public Guid UserRoleId { get; set; }
 
         [Required]
         public Guid UserId { get; set; }
+
+        [Required]
+        public int RoleId { get; set; }
+
+        //Navigation
+        public Role? Role { get; set; }
+
         public User? User { get; set; }
+
     }
 }
