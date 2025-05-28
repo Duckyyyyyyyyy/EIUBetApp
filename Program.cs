@@ -48,7 +48,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<EIUBetAppHub>("/bethub");
+app.MapHub<EIUBetAppHub>("/betHub");
 
 app.MapControllerRoute(
     name: "default",

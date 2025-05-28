@@ -12,6 +12,8 @@ namespace EIUBetApp.Models
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string? Thumbnail { get; set; }
+
 
         //Navigation
         public ICollection<Room> Rooms { get; set; }

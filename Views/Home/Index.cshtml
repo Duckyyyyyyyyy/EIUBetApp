@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Home";
 }
+@model List<EIUBetApp.Models.Game>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -50,16 +51,16 @@
     </style>
 </head>
 <body>
-    <div class="center-container">
-        <div class="game-button me-2" onclick="location.href='@Url.Action("Index", "Lobby")'">
-            <img src="~/Assets/tai_xiu.png" alt="Tài xỉu" />
-            <span>Tài xỉu</span>
+
+<div class="center-container">
+    @foreach (var game in Model)
+    {
+        <div class="game-button me-2" onclick="location.href='@Url.Action("Index", "Lobby", new { gameId = game.GameId })'">
+            <img src="~/Assets/@game.Thumbnail" alt="@game.Name" />
+            <span>@game.Name</span>
         </div>
-        <div class="game-button" onclick="location.href='@Url.Action("Index", "Lobby")'">
-            <img src="~/Assets/BauCua.png" alt="Bầu cua" />
-            <span>Bầu cua</span>
-        </div>
-    </div>
-   
+    }
+</div>
+
 </body>
 </html>

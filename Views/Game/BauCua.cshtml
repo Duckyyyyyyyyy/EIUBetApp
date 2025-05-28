@@ -1,6 +1,7 @@
 ﻿@{
 	Layout = "_GameLayout";
 }
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,36 +12,7 @@
 <body>
 	<div class="main-layout">
 		<!-- Sidebar -->
-		<aside class="sidebar">
-			<div class="user-card" id="user1">
-				<h4>User 1</h4>
-				<p>Balance: $120</p>
-				<p class="status">Ready</p>
-				<p class="status">Win</p>
-			</div>
-			<div class="user-card" id="user2">
-				<h4>User 2</h4>
-				<p>Balance: $85</p>
-				<p class="status">Ready</p>
-				<p class="status">Lose</p>
-			</div>
-			<div class="user-card" id="user3">
-				<h4>User 3</h4>
-				<p>Balance: $95</p>
-				<p class="status">Not Ready</p>
-				<p class="status">Lose</p>
-			</div>
-			<div class="user-card" id="user3">
-				<h4>User 4</h4>
-				<p>Balance: $95</p>
-				<p class="status">Not Ready</p>
-				<p class="status">Lose</p>
-				<button class="readyBtn">Ready</button>
-				<br />
-				<a href="/Home/Index">Quit</a>
-			</div>
-
-		</aside>
+		<aside class="sidebar" id="playerContainer"></aside>
 
 		<!-- Game Section -->
 		<section class="game-section">
@@ -124,6 +96,7 @@
 			<div class="result" id="resultText"></div>
 		</section>
 	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 	<script>
 		const btn = document.querySelector(".btn");
 		const efx = document.querySelector(".bgeffect");
@@ -209,6 +182,52 @@
 
 				resultDiv.textContent = message;
 			}, 1000);
+		});
+
+
+		//signalR
+			const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
+		const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
+
+		const connection = new signalR.HubConnectionBuilder()
+			.withUrl("/betHub")
+			.configureLogging(signalR.LogLevel.Information)
+			.build();
+
+		if (!roomId || !playerId) {
+			console.error("Missing roomId or playerId");
+		} else {
+			connection.start()
+				.then(() => {
+					console.log("Connected to SignalR hub.");
+					return connection.invoke("JoinRoom", roomId, playerId);
+				})
+				.catch(err => console.error("SignalR connection error:", err));
+		}
+
+		connection.on("UpdatePlayerList", function (players) {
+			const container = document.getElementById("playerContainer");
+			container.innerHTML = "";
+
+			players.forEach((player, index) => {
+				const div = document.createElement("div");
+				div.className = "user-card";
+				div.id = `user${index + 1}`;
+
+				div.innerHTML = `
+					<h4>User ${index + 1}</h4>
+					<p>Balance: ${player.PlayerId}</p>
+					<p class="status">Not Ready</p>
+					<p class="status">Waiting</p>
+					${player.PlayerId === playerId ? `
+						<button class="readyBtn">Ready</button>
+						<br />
+						<a href="/Home/Index">Quit</a>
+					` : ""}
+				`;
+
+				container.appendChild(div);
+			});
 		});
 	</script>
 </body>

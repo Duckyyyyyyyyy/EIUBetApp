@@ -1,9 +1,12 @@
 ﻿using EIUBetApp.Data;
+using EIUBetApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
+    [Authorize(Roles ="Player,Admin")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -33,12 +36,21 @@ namespace EIUBetApp.Controllers
             return View();
         }
 
-        public IActionResult BauCua(string room)
+        public IActionResult BauCua(Guid RoomId)
         {
+            var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
+            if (room == null) return NotFound();
 
-            ViewBag.RoomName = room;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+            if (player == null) return NotFound();
+
+            ViewBag.RoomId = room.RoomId;
+            ViewBag.PlayerId = player.PlayerId;
+
             return View();
         }
+
         private static int winCount = 0;
         private static int lossCount = 0;
         private static int balance = 100;
