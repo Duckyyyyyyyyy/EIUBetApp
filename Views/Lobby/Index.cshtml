@@ -1,107 +1,106 @@
-﻿<!DOCTYPE html>
+﻿@model Tuple<IEnumerable<EIUBetApp.Models.Player>, IEnumerable<EIUBetApp.Models.Room>>
+@{
+    ViewData["Title"] = "Rooms Dashboard";
+    var currentPlayer = ViewBag.CurrentPlayer as EIUBetApp.Models.Player;
+}
+<!DOCTYPE html>
 <html>
 <head>
-	<title>Rooms Dashboard</title>
-	<link rel="stylesheet" href="~/css/Lobby.css" asp-append-version="true" />
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/Lobby.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 </head>
 <body>
-	<div class="container-fluid h-100">
-		<div class="row h-100">
-			<!-- Sidebar -->
-			<aside class="col-md-3 sidebar d-flex flex-column">
-				<div class="user-info">
-					<h4 id="username">JohnDoe</h4>
-					<p>Balance: <strong id="balance">$150.00</strong></p>
-				</div>
+    <div class="container-fluid h-100">
+        <div class="row h-100">
+            <!-- Sidebar -->
+            <aside class="col-md-3 sidebar d-flex flex-column">
+                @if (currentPlayer != null)
+                {
+                    <div class="user-info">
+                        <h4 id="username">@currentPlayer.User.Username</h4>
+                        <p>Balance: <strong id="balance">$@currentPlayer.Balance.ToString("F2")</strong></p>
+                        <input type="hidden" id="playerId" value="@currentPlayer.PlayerId" />
+                    </div>
+                }
+                else
+                {
+                    <div class="user-info">
+                        <h4 id="username">Guest</h4>
+                        <p>Balance: <strong id="balance">$0.00</strong></p>
+                    </div>
+                }
 
-				<h5 class="text-white mb-2">Online Users</h5>
-				<div class="friends" id="friendsList">
-					<!-- Friends will be loaded here -->
-				</div>
+                <h5 class="text-white mb-2">Online Users</h5>
+                <div class="friends" id="friendsList">
+                    @foreach (var player in Model.Item1)
+                    {
+                        <div class="friend">
+                            <div class="friend-name">
+                                <span class="status-dot"></span>
+                                @player.User.Username
+                            </div>
+                            <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
+                        </div>
+                    }
+                </div>
 
-				<button class="btn btn-outline-light logout-btn" onclick="logout()">Logout</button>
-			</aside>
+                <button class="btn btn-outline-light logout-btn" onclick="logout()">Logout</button>
+            </aside>
 
-			<!-- Main Content -->
-			<main class="col-md-9 p-4 bg-light">
-				<h3>Available Rooms</h3>
-				<div id="roomList">
-					<!-- Room cards will be added by JS -->
-				</div>
-			</main>
-		</div>
-	</div>
+            <!-- Main Content -->
+            <main class="col-md-9 p-4 bg-light">
+                <h3>Available Rooms</h3>
+                <div id="roomList">
+                    @foreach (var room in Model.Item2)
+                    {
+                        <div class="room-card d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>@room.RoomName</h5>
+                                <p class="mb-0">Room ID: @room.RoomId</p>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="joinRoom('@room.RoomId')">Join</button>
+                        </div>
+                    }
+                </div>
+            </main>
+        </div>
+    </div>
 
-	<script>
-		  const currentUser = {
-			  username: "JohnDoe",
-			  balance: 150.00
-		  };
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/betHub")
+            .build();
 
-		  const rooms = [
-			  { name: "Room A", users: 3 },
-			  { name: "Room B", users: 5 },
-			  { name: "Room C", users: 2 },
-			  { name: "Room D", users: 4 },
-			  { name: "Room E", users: 1 }
-		  ];
+        // Start SignalR connection
+        connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
 
-		  const usersOnline = [
-			  { username: "Alice" },
-			  { username: "Bob" },
-			  { username: "Charlie" },
-			  { username: "Diana" },
-			  { username: "Eve" }
-		  ];
+        // Join room by RoomId and PlayerId
+        async function joinRoom(roomId) {
+            const playerId = document.getElementById("playerId")?.value;
+            if (!playerId) {
+                alert("You must be logged in to join a room.");
+                return;
+            }
 
-		  // Load user info
-		  document.getElementById("username").textContent = currentUser.username;
-		  document.getElementById("balance").textContent = `$${currentUser.balance.toFixed(2)}`;
+            try {
+                // Call the JoinRoom hub method with roomId and playerId
+                await connection.invoke("JoinRoom", roomId, playerId);
 
-		  // Load rooms
-		  const roomList = document.getElementById("roomList");
-		  rooms.forEach(room => {
-			  const div = document.createElement("div");
-			  div.className = "room-card d-flex justify-content-between align-items-center";
-			  div.innerHTML = `
-		  <div>
-			<h5>${room.name}</h5>
-			<p class="mb-0">Users: ${room.users}</p>
-		  </div>
-		  <button class="btn btn-sm btn-primary" onclick="joinRoom('${room.name}')">Join</button>
-		`;
-			  roomList.appendChild(div);
-		  });
+                // Redirect to the game room page
+                 window.location.href = `/Game/BauCua?roomId=${roomId}`;
+            } catch (err) {
+                console.error("Failed to join room:", err);
+                alert("Failed to join room. Please try again.");
+            }
+        }
 
-		  // Load friends
-		  const friendsList = document.getElementById("friendsList");
-		  usersOnline.forEach(friend => {
-			  const friendDiv = document.createElement("div");
-			  friendDiv.className = "friend";
-
-			  friendDiv.innerHTML = `
-		  <div class="friend-name">
-			<span class="status-dot"></span>
-			${friend.username}
-		  </div>
-		  <button class="btn btn-sm btn-outline-light" onclick="invite('${friend.username}')">Invite</button>
-		`;
-			  friendsList.appendChild(friendDiv);
-		  });
-
-		function joinRoom(name) {
-			window.location.href = `/Game/Index?room=${encodeURIComponent(name)}`;
-		}
-
-
-		  function invite(username) {
-			  alert(`Inviting ${username} to a room...`);
-		  }
-
-		  function logout() {
-			  alert("Logged out!");
-			  // Add real logout logic here
-		  }
-	</script>
+        // Example real-time notification when a user joins a room
+        connection.on("UserJoined", function (username) {
+            alert(`${username} has joined the room!`);
+            // Optionally update UI here with new user info
+        });
+    </script>
 </body>
 </html>

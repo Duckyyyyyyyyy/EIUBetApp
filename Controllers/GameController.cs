@@ -1,8 +1,12 @@
 ﻿using EIUBetApp.Data;
+using EIUBetApp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
+    [Authorize(Roles ="Player,Admin")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -10,16 +14,43 @@ namespace EIUBetApp.Controllers
         {
             _context = context;
         }
-        public IActionResult Index(string room)
+      
+        public IActionResult Index()
         {
-            ViewBag.RoomName = room;
+            // Access claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // as string
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var username = User.FindFirstValue("Username");
+            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+
+            // Convert userId to Guid if needed
+            var userGuid = Guid.Parse(userId);
+
+            // You can also query more data from DB using userGuid
+            var player = _context.Player.FirstOrDefault(p => p.UserId == userGuid);
+
+            ViewBag.Username = username;
+            ViewBag.Email = email;
+            ViewBag.Balance = player?.Balance ?? 0;
+            ViewBag.Roles = roles;
             return View();
         }
-        public IActionResult BauCua(string room)
+
+        public IActionResult BauCua(Guid RoomId)
         {
-            ViewBag.RoomName = room;
+            var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
+            if (room == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+            if (player == null) return NotFound();
+
+            ViewBag.RoomId = room.RoomId;
+            ViewBag.PlayerId = player.PlayerId;
+
             return View();
         }
+
         private static int winCount = 0;
         private static int lossCount = 0;
         private static int balance = 100;
