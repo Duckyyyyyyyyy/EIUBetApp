@@ -25,6 +25,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <Folder Include="Migrations\" />
 
     <Folder Include="wwwroot\Assets\" />
   </ItemGroup>

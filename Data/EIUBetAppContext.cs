@@ -55,21 +55,21 @@ namespace EIUBetApp.Data
                 .HasOne(r => r.Game)
                 .WithMany(g => g.Rooms)
                 .HasForeignKey(r => r.GameId)
-                .OnDelete(DeleteBehavior.SetNull); // if Game is deleted
+                .OnDelete(DeleteBehavior.Cascade); // if Game is deleted
 
             // Logs - Game (Many-to-One)
             modelBuilder.Entity<Logs>()
                 .HasOne(l => l.Game)
                 .WithMany(g => g.Logs)
                 .HasForeignKey(l => l.GameId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Logs - Room (Many-to-One)
             modelBuilder.Entity<Logs>()
                 .HasOne(l => l.Room)
                 .WithMany(r => r.Logs)
                 .HasForeignKey(l => l.RoomId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Logs - Player (Many-to-One)
             modelBuilder.Entity<Logs>()

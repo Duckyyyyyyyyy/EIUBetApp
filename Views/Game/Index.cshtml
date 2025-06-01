@@ -9,172 +9,194 @@
 	<link rel="stylesheet" href="~/css/SicBo.css" asp-append-version="true" />
 </head>
 <body>
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-dark p-3 rounded shadow-sm" style="min-width: 250px;">
+            <div class="mb-4">
+                <h5 class="fw-bold text-white">🎮 Chào mừng</h5>
+                <p class="text-light">
+                    <span class="badge bg-primary me-1">Player</span>
+                    <span class="text-muted">đến với phòng:</span>
+                    <span class="fw-semibold">VIP Room</span>
+                </p>
+            </div>
 
-	<div class="main-layout">
-		<!-- Sidebar -->
-		<aside class="sidebar">
-			<h2>
-				Chào mừng @foreach (var role in ViewBag.Roles as List<string>)
-				{
-					<span>@role</span>
-				} đến với phòng: @ViewBag.RoomName
-			</h2>
-			<div class="user-card" id="user1">
-				<h4>Bạn @ViewBag.Username</h4>
-				<p>Email: @ViewBag.Email</p>
-				<p>Số dư: <span id="balance"> $100</span></p>
-				<p>Balance: $@ViewBag.Balance</p>
-			</div>
-			<a href="/Home/Index">Thoát</a>
-		</aside>
+            <div class="card mb-3 bg-dark text-light shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-success fw-bold">👤 @ViewBag.Username</h5>
+                    <p class="card-text mb-1"><i class="bi bi-envelope-fill me-2"></i>Email: <span class="text-muted">@ViewBag.Email</span></p>
+                    <p class="card-text mb-1"><i class="bi bi-wallet-fill me-2"></i>Ingame money: <span id="balance" class="text-primary fw-semibold">$100</span></p>
+                    <p class="card-text"><i class="bi bi-cash-stack me-2"></i>Balance: <span class="fw-bold text-danger">$@ViewBag.Balance</span></p>
+                </div>
+            </div>
 
-		<section class="game-section">
-			<div class="dice-wrapper">
-				<div class="containerD" id="dice1">🎲</div>
-				<div class="containerD" id="dice2">🎲</div>
-				<div class="containerD" id="dice3">🎲</div>
-			</div>
+            <a href="#" class="btn btn-outline-danger w-100">🚪 Thoát phòng</a>
+        </aside>
 
-			<div id="latestResults" class="text-center p-3 border mb-3">
-				<h3>8 Lần Kết Quả Mới Nhất</h3>
-				<div id="resultsContainer"></div>
-			</div>
+        <section class="game-section">
+            <!-- Dice Display -->
+            <div class="dice-wrapper">
+                <div class="containerD" id="dice1">🎲</div>
+                <div class="containerD" id="dice2">🎲</div>
+                <div class="containerD" id="dice3">🎲</div>
+            </div>
 
-			<div class="prediction-buttons">
-				<button class="predict-btn" data-value="xiu">Xỉu (4-10)</button>
-				<button class="predict-btn" data-value="tai">Tài (11-17)</button>
-			</div>
+            <!-- Latest Results -->
+            <div id="latestResults" class="text-center p-3 border mb-3">
+                <h3>8 Lần Kết Quả Mới Nhất</h3>
+                <div id="resultsContainer">
+                    <span class="result-badge win">Win: 11</span>
+                    <span class="result-badge lose">Lose: 7</span>
+                    <span class="result-badge win">Win: 14</span>
+                    <span class="result-badge draw">Draw: 3</span>
+                    <span class="result-badge lose">Lose: 8</span>
+                    <span class="result-badge win">Win: 16</span>
+                    <span class="result-badge lose">Lose: 6</span>
+                    <span class="result-badge win">Win: 13</span>
+                </div>
+            </div>
 
-			<button class="btn" id="spinBtn">Lắc Xúc Xắc</button>
-			<p id="resultText"></p>
-			<p id="sumResult"></p>
-		</section>
-	</div>
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <!-- Enhanced Betting Section -->
+            <div class="betting-section">
+                <h2 class="betting-title">💰 PLACE YOUR BET 💰</h2>
 
-	<script>
-		let prediction = null;
-		let balance = 100;
-		let latestResults = [];  // stores objects {sum, result, prediction, status}
+                <!-- Bet Amount Selection -->
+                <div class="bet-amount-section">
+                    <div class="bet-amount-label">Chọn số tiền cược:</div>
+                    <div class="bet-amount-buttons">
+                        <button class="bet-amount-btn selected" data-amount="10">$10</button>
+                        <button class="bet-amount-btn" data-amount="25">$25</button>
+                        <button class="bet-amount-btn" data-amount="50">$50</button>
+                        <button class="bet-amount-btn" data-amount="100">$100</button>
+                    </div>
+                </div>
 
-		function updateLatestResults(newResult) {
-			latestResults.unshift(newResult);  // add new result to front
-			if (latestResults.length > 8) {
-				latestResults.pop();  // keep only last 8
-			}
+                <!-- Prediction Buttons -->
+                <div class="prediction-buttons">
+                    <button class="predict-btn" data-value="xiu">
+                        <i class="bi bi-arrow-down-circle-fill me-2"></i>
+                        Xỉu (4-10)
+                        <div style="font-size: 0.9rem; margin-top: 5px;">Tổng nhỏ</div>
+                    </button>
+                    <button class="predict-btn" data-value="tai">
+                        <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                        Tài (11-17)
+                        <div style="font-size: 0.9rem; margin-top: 5px;">Tổng lớn</div>
+                    </button>
+                </div>
 
-			const container = document.getElementById("resultsContainer");
-			container.innerHTML = ""; // clear old
+                <!-- Spin Button -->
+                <button class="btn" id="spinBtn">
+                    <span style="margin-left: 30px;">Lắc Xúc Xắc</span>
+                </button>
+            </div>
 
-			latestResults.forEach(r => {
-				const span = document.createElement("span");
-				span.classList.add("result-badge");
+            <!-- Result Display -->
+            <div class="result-display">
+                <p id="resultText"></p>
+                <p id="sumResult"></p>
+            </div>
+        </section>
+    </div>
 
-				// Determine if it's win, lose, or draw for styling
-				if (r.result === "hoa") {
-					span.classList.add("draw");
-					span.textContent = `Draw: ${r.sum}`;
-				} else if (r.prediction === r.result) {
-					span.classList.add("win");
-					span.textContent = `Win: ${r.sum}`;
-				} else {
-					span.classList.add("lose");
-					span.textContent = `Lose: ${r.sum}`;
-				}
-				container.appendChild(span);
-			});
-		}
-
-		$(".predict-btn").click(function () {
-			prediction = $(this).data("value");
-			$(".predict-btn").css("background-color", "");
-			$(this).css("background-color", "#8f8");
-		});
-		$("#spinBtn").click(function () {
-			if (!prediction) {
-				$("#resultText").text("Vui lòng chọn Tài hoặc Xỉu để cược.");
-				return;
-			}
-
-			$.ajax({
-				url: '/Game/Spin',
-				type: 'POST',
-				data: { prediction: prediction },
-				success: function (data) {
-					for (let i = 0; i < 3; i++) {
-						$("#dice" + (i + 1)).text(" 🎲 " + data.dice[i]);
-					}
-					$("#sumResult").text("Tổng: " + data.sum);
-
-					let statusText = "";
-					if (data.result === "hoa") {
-						statusText = "Draw!";
-					} else if (data.result === prediction) {
-						statusText = "✅ You Won!";
-					} else {
-						statusText = "❌ You Lost!";
-					}
-					$("#resultText").text(statusText);
-					balance = data.balance;
-					$("#balance").text("$" + balance);
-
-					// Add this call to update the history
-					updateLatestResults({
-						sum: data.sum,
-						result: data.result,
-						prediction: prediction
-					});
-				},
-				error: function () {
-					$("#resultText").text("Lỗi kết nối với server.");
-				}
-			});
-		});
-
-
-	</script>
-	@* <script>
-
-        const spinBtn = document.getElementById("spinBtn");
-        const resultText = document.getElementById("resultText");
-        const sumResult = document.getElementById("sumResult");
-        const balanceText = document.getElementById("balance");
-        const predictButtons = document.querySelectorAll(".predict-btn");
-        const diceDivs = [document.getElementById("dice1"), document.getElementById("dice2"), document.getElementById("dice3")];
-        const resultsContainer = document.getElementById("resultsContainer");
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
         let prediction = null;
+        let betAmount = 10;
         let balance = 100;
-        let winCount = 0;
-        let lossCount = 0;
         let latestResults = [];
 
-        predictButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                prediction = btn.dataset.value;
-                predictButtons.forEach(b => b.style.backgroundColor = "");
-                btn.style.backgroundColor = "#8f8";
-            });
+        // Bet amount selection
+        $('.bet-amount-btn').click(function () {
+            betAmount = parseInt($(this).data('amount'));
+            $('.bet-amount-btn').removeClass('selected');
+            $(this).addClass('selected');
         });
 
-        function rollDice() {
-            return Math.floor(Math.random() * 6) + 1;
-        }
+        // Prediction selection with enhanced visual feedback
+        $(".predict-btn").click(function () {
+            prediction = $(this).data("value");
+            $(".predict-btn").removeClass("selected");
+            $(this).addClass("selected");
 
-        function getResult(sum) {
-            if (sum >= 11 && sum <= 17) return "tai";
-            if (sum >= 4 && sum <= 10) return "xiu";
-            return "hoa";
-        }
+            // Add a subtle shake animation
+            $(this).css('animation', 'none');
+            setTimeout(() => {
+                $(this).css('animation', '');
+            }, 10);
+        });
 
-        function generateDiceSumNotMatchingPrediction(prediction) {
-            let dice, sum, result;
-            do {
-                dice = [rollDice(), rollDice(), rollDice()];
-                sum = dice.reduce((a, b) => a + b, 0);
-                result = getResult(sum);
-            } while (result === prediction || result === "hoa");
-            return { dice, sum, result };
+        // Enhanced spin functionality
+        $("#spinBtn").click(function () {
+            if (!prediction) {
+                $("#resultText").text("⚠️ Vui lòng chọn Tài hoặc Xỉu để cược!");
+                $("#resultText").css('color', '#ff6b6b');
+                return;
+            }
+
+            // Simulate dice rolling animation
+            const diceElements = ['#dice1', '#dice2', '#dice3'];
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                diceElements.forEach(dice => {
+                    $(dice).text('🎲').css('transform', 'rotate(' + (Math.random() * 360) + 'deg)');
+                });
+                rollCount++;
+                if (rollCount > 10) {
+                    clearInterval(rollInterval);
+                    performSpin();
+                }
+            }, 100);
+        });
+
+        function performSpin() {
+            // Simulate server call - replace with actual AJAX call
+            const dice = [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1
+            ];
+            const sum = dice.reduce((a, b) => a + b, 0);
+            let result;
+
+            if (sum >= 11 && sum <= 17) result = "tai";
+            else if (sum >= 4 && sum <= 10) result = "xiu";
+            else result = "hoa";
+
+            // Display results
+            for (let i = 0; i < 3; i++) {
+                $("#dice" + (i + 1)).text("🎲 " + dice[i]).css('transform', 'rotate(0deg)');
+            }
+            $("#sumResult").text("Tổng: " + sum);
+
+            let statusText = "";
+            let statusColor = "";
+            if (result === "hoa") {
+                statusText = "🤝 Hòa! Hoàn tiền";
+                statusColor = "#ff9800";
+            } else if (result === prediction) {
+                statusText = "🎉 Bạn Thắng! +" + betAmount;
+                statusColor = "#4CAF50";
+                balance += betAmount;
+            } else {
+                statusText = "😔 Bạn Thua! -" + betAmount;
+                statusColor = "#f44336";
+                balance -= betAmount;
+            }
+
+            $("#resultText").text(statusText).css('color', statusColor);
+            $("#balance").text("$" + balance);
+
+            // Update results history
+            updateLatestResults({
+                sum: sum,
+                result: result,
+                prediction: prediction
+            });
+
+            // Reset selection
+            $(".predict-btn").removeClass("selected");
+            prediction = null;
         }
 
         function updateLatestResults(newResult) {
@@ -183,73 +205,27 @@
                 latestResults.pop();
             }
 
-            resultsContainer.innerHTML = "";
+            const container = document.getElementById("resultsContainer");
+            container.innerHTML = "";
 
             latestResults.forEach(r => {
                 const span = document.createElement("span");
                 span.classList.add("result-badge");
 
-                span.classList.add(r.result);
-
-                if (r.result === 'hoa') {
+                if (r.result === "hoa") {
                     span.classList.add("draw");
+                    span.textContent = `Draw: ${r.sum}`;
                 } else if (r.prediction === r.result) {
                     span.classList.add("win");
+                    span.textContent = `Win: ${r.sum}`;
                 } else {
                     span.classList.add("lose");
+                    span.textContent = `Lose: ${r.sum}`;
                 }
-
-                span.textContent = `${r.sum} (${r.result.toUpperCase()})`;
-                resultsContainer.appendChild(span);
+                container.appendChild(span);
             });
         }
-
-        spinBtn.addEventListener("click", () => {
-            if (!prediction) {
-                resultText.textContent = "Vui lòng chọn Tài hoặc Xỉu để cược.";
-                return;
-            }
-
-            let dice = [rollDice(), rollDice(), rollDice()];
-            let sum = dice.reduce((a, b) => a + b, 0);
-            let result = getResult(sum);
-
-            // Secret enforcement logic
-            const shouldWin = result === prediction;
-            const overWinLimit = winCount >= lossCount;
-
-            if (shouldWin && overWinLimit) {
-                // Fake the result to a loss
-                const fake = generateDiceSumNotMatchingPrediction(prediction);
-                dice = fake.dice;
-                sum = fake.sum;
-                result = fake.result;
-            }
-
-            // Display dice
-            diceDivs.forEach((div, i) => {
-                div.textContent = ` 🎲 ${dice[i]}`;
-            });
-
-            sumResult.textContent = `Tổng: ${sum}`;
-
-            if (result === "hoa") {
-                resultText.textContent = "Draw!";
-            } else if (result === prediction) {
-                resultText.textContent = "✅ You Won!";
-                balance += 10;
-                winCount++;
-            } else {
-                resultText.textContent = "❌ You Lost!";
-                balance -= 10;
-                lossCount++;
-            }
-
-            balanceText.textContent = `$${balance}`;
-            updateLatestResults({ sum, result, prediction });
-        });
-    </script> *@
-
+    </script>
 </body>
 
 </html>

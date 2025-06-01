@@ -17,7 +17,6 @@
     flex-direction: column;
 }
 
-
     .sidebar a {
         color: #adb5bd;
         text-decoration: none;
@@ -56,6 +55,27 @@
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 123, 255, 0.5);
     user-select: none;
+    /* Enhanced with floating animation */
+    transition: all 0.3s ease;
+    animation: float 3s ease-in-out infinite;
+}
+
+    .containerD:nth-child(2) {
+        animation-delay: -1s;
+    }
+
+    .containerD:nth-child(3) {
+        animation-delay: -2s;
+    }
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 .prediction-buttons {
@@ -121,7 +141,6 @@
     margin-bottom: 20px;
     font-weight: 500;
 }
-
 /* Latest results container */
 #latestResults {
     width: 100%;
@@ -172,3 +191,235 @@
         color: #212529;
         box-shadow: none;
     }
+
+/* Enhanced Betting Section */
+.betting-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 25px 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.betting-title {
+    text-align: center;
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Enhanced Prediction Buttons */
+.prediction-buttons {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.predict-btn {
+    position: relative;
+    padding: 18px 35px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border: solid 2px transparent;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    min-width: 180px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+    .predict-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s;
+    }
+
+    .predict-btn:hover::before {
+        left: 100%;
+    }
+
+    .predict-btn[data-value="xiu"] {
+        background: linear-gradient(145deg, #dc3545, #c82333);
+        color: white;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .predict-btn[data-value="tai"] {
+        background: linear-gradient(145deg, #28a745, #218838);
+        color: white;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .predict-btn:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .predict-btn.selected {
+        transform: translateY(-3px) scale(1.05);
+        border: 2px solid #fff;
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), 0 12px 30px rgba(0, 0, 0, 0.4);
+        animation: pulse-glow 2s infinite;
+    }
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 35px rgba(255, 255, 255, 0.9), 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Enhanced Spin Button */
+#spinBtn {
+    display: block;
+    margin: 0 auto;
+    padding: 16px 45px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    background: linear-gradient(145deg, #ffc107, #e0a800);
+    color: #212529;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+    #spinBtn::before {
+        content: '🎲';
+        position: absolute;
+        left: -25px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.3rem;
+        transition: left 0.3s ease;
+    }
+
+    #spinBtn:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 12px 35px rgba(255, 193, 7, 0.7);
+        background: linear-gradient(145deg, #e0a800, #d39e00);
+    }
+
+        #spinBtn:hover::before {
+            left: 18px;
+        }
+
+    #spinBtn:active {
+        transform: translateY(-1px) scale(1.01);
+    }
+
+/* Bet Amount Section */
+.bet-amount-section {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.bet-amount-label {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.bet-amount-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.bet-amount-btn {
+    padding: 8px 16px;
+    background: linear-gradient(145deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    min-width: 70px;
+    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
+
+    .bet-amount-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 123, 255, 0.5);
+    }
+
+    .bet-amount-btn.selected {
+        background: linear-gradient(145deg, #dc3545, #c82333);
+        box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);
+        transform: translateY(-1px);
+    }
+
+/* Enhanced Result Display */
+.result-display {
+    text-align: center;
+    margin-top: 25px;
+    color: white;
+}
+
+#resultText {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 12px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+#sumResult {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #ffc107;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .prediction-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .predict-btn {
+        min-width: 220px;
+    }
+
+    .bet-amount-buttons {
+        gap: 8px;
+    }
+
+    .bet-amount-btn {
+        min-width: 60px;
+        font-size: 0.9rem;
+    }
+}
