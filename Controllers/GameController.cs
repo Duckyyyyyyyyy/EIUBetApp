@@ -2,6 +2,7 @@
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
@@ -40,14 +41,22 @@ namespace EIUBetApp.Controllers
         public IActionResult BauCua(Guid RoomId)
         {
             var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
-            if (room == null) return NotFound();
+            if (room == null) return NotFound();            
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var username = User.FindFirstValue("Username");
+            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            
             var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
             if (player == null) return NotFound();
 
             ViewBag.RoomId = room.RoomId;
             ViewBag.PlayerId = player.PlayerId;
+            ViewBag.Username = username;
+            ViewBag.Email = email;
+            ViewBag.Balance = player?.Balance ?? 0;
+            ViewBag.Roles = roles;
 
             return View();
         }
