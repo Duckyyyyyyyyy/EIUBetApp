@@ -25,8 +25,8 @@
                 <div class="card-body">
                     <h5 class="card-title text-success fw-bold">👤 @ViewBag.Username</h5>
                     <p class="card-text mb-1"><i class="bi bi-envelope-fill me-2"></i>Email: <span class="text-muted">@ViewBag.Email</span></p>
-                    <p class="card-text mb-1"><i class="bi bi-wallet-fill me-2"></i>Ingame money: <span id="balance" class="text-primary fw-semibold">$100</span></p>
-                    <p class="card-text"><i class="bi bi-cash-stack me-2"></i>Balance: <span class="fw-bold text-danger">$@ViewBag.Balance</span></p>
+                    @* <p class="card-text mb-1"><i class="bi bi-wallet-fill me-2"></i>Ingame money: <span id="balance" class="text-primary fw-semibold">$100</span></p> *@
+                    <p class="card-text"><i class="bi bi-cash-stack me-2"></i>Balance: <span id="balance" class="fw-bold text-danger">$@ViewBag.Balance</span></p>
                 </div>
             </div>
 
@@ -103,7 +103,7 @@
     <script>
         let prediction = null;
         let betAmount = 10;
-        let balance = 100;
+        let balance = @ViewBag.Balance;
         let latestResults = [];
 
         // Bet amount selection
@@ -150,54 +150,45 @@
         });
 
         function performSpin() {
-            // Simulate server call - replace with actual AJAX call
-            const dice = [
-                Math.floor(Math.random() * 6) + 1,
-                Math.floor(Math.random() * 6) + 1,
-                Math.floor(Math.random() * 6) + 1
-            ];
-            const sum = dice.reduce((a, b) => a + b, 0);
-            let result;
+            $.ajax({
+                type: "POST",
+                url: "/Game/Spin",
+                data: { prediction: prediction, betAmount: betAmount },
+                success: function (data) {
+                    const dice = data.dice;
+                    const sum = data.sum;
+                    const result = data.result;
+                    balance = data.balance;
 
-            if (sum >= 11 && sum <= 17) result = "tai";
-            else if (sum >= 4 && sum <= 10) result = "xiu";
-            else result = "hoa";
+                    // Update dice visuals
+                    $('#dice1').text(`🎲 ${dice[0]}`);
+                    $('#dice2').text(`🎲 ${dice[1]}`);
+                    $('#dice3').text(`🎲 ${dice[2]}`);
 
-            // Display results
-            for (let i = 0; i < 3; i++) {
-                $("#dice" + (i + 1)).text("🎲 " + dice[i]).css('transform', 'rotate(0deg)');
-            }
-            $("#sumResult").text("Tổng: " + sum);
+                    // Update result
+                    let resultMessage = "";
+                    if (result === prediction) {
+                        resultMessage = `🎉 Bạn đã thắng! (${sum})`;
+                        $("#resultText").css('color', 'green');
+                    } else if (result === "hoa") {
+                        resultMessage = `🤝 Hòa rồi! (${sum})`;
+                        $("#resultText").css('color', 'gray');
+                    } else {
+                        resultMessage = `😢 Thua rồi! (${sum})`;
+                        $("#resultText").css('color', 'red');
+                    }
 
-            let statusText = "";
-            let statusColor = "";
-            if (result === "hoa") {
-                statusText = "🤝 Hòa! Hoàn tiền";
-                statusColor = "#ff9800";
-            } else if (result === prediction) {
-                statusText = "🎉 Bạn Thắng! +" + betAmount;
-                statusColor = "#4CAF50";
-                balance += betAmount;
-            } else {
-                statusText = "😔 Bạn Thua! -" + betAmount;
-                statusColor = "#f44336";
-                balance -= betAmount;
-            }
-
-            $("#resultText").text(statusText).css('color', statusColor);
-            $("#balance").text("$" + balance);
-
-            // Update results history
-            updateLatestResults({
-                sum: sum,
-                result: result,
-                prediction: prediction
+                    $("#resultText").text(resultMessage);
+                    $("#sumResult").text(`Tổng điểm: ${sum}`);
+                    $("#balance").text(`$${balance}`);
+                },
+                error: function () {
+                    $("#resultText").text("⚠️ Có lỗi xảy ra khi gọi API.");
+                    $("#resultText").css('color', '#ff6b6b');
+                }
             });
-
-            // Reset selection
-            $(".predict-btn").removeClass("selected");
-            prediction = null;
         }
+
 
         function updateLatestResults(newResult) {
             latestResults.unshift(newResult);
