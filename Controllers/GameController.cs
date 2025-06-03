@@ -2,77 +2,82 @@
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles ="Player,Admin")]
+    [Authorize(Roles = "Player,Admin")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
+        private static readonly Random rand = new();
+        private static int winCount = 0;
+        private static int lossCount = 0;
+
         public GameController(EIUBetAppContext context)
         {
             _context = context;
         }
-      
+
         public IActionResult Index()
         {
-            // Access claims
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // as string
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");
             var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-            // Convert userId to Guid if needed
             var userGuid = Guid.Parse(userId);
-
-            // You can also query more data from DB using userGuid
             var player = _context.Player.FirstOrDefault(p => p.UserId == userGuid);
 
             ViewBag.Username = username;
             ViewBag.Email = email;
             ViewBag.Balance = player?.Balance ?? 0;
             ViewBag.Roles = roles;
+
             return View();
         }
 
         public IActionResult BauCua(Guid RoomId)
         {
             var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
-            if (room == null) return NotFound();
+            if (room == null) return NotFound();            
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var username = User.FindFirstValue("Username");
+            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            
             var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
             if (player == null) return NotFound();
 
             ViewBag.RoomId = room.RoomId;
             ViewBag.PlayerId = player.PlayerId;
+            ViewBag.Username = username;
+            ViewBag.Email = email;
+            ViewBag.Balance = player?.Balance ?? 0;
+            ViewBag.Roles = roles;
 
             return View();
         }
 
-        private static int winCount = 0;
-        private static int lossCount = 0;
-        private static int balance = 100;
-
         [HttpPost]
-        public JsonResult Spin(string prediction)
+        public JsonResult Spin(string prediction, int betAmount)
         {
-            var rand = new Random();
-
-            string GetResult(int sum)
+            if (prediction != "tai" && prediction != "xiu")
             {
-                if (sum >= 11 && sum <= 17) return "tai";
-                if (sum >= 4 && sum <= 10) return "xiu";
-                return "hoa";
+                return Json(new { error = "Invalid prediction. Must be 'tai' or 'xiu'." });
             }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+            if (player == null) return Json(new { error = "Player not found." });
 
             int[] dice;
             int sum;
             string result;
 
-            bool shouldWin;
-            bool overWinLimit;
+            string GetResult(int s) => s >= 11 && s <= 17 ? "tai" : (s >= 4 && s <= 10 ? "xiu" : "hoa");
 
             do
             {
@@ -80,17 +85,12 @@ namespace EIUBetApp.Controllers
                 sum = dice.Sum();
                 result = GetResult(sum);
 
-                shouldWin = result == prediction;
-                overWinLimit = winCount >= lossCount;
+            } while (result == prediction && winCount >= lossCount && result != "hoa");
 
-                // If player "should win" but has already won more or equal times, generate again (fake a loss)
-            } while (shouldWin && overWinLimit && result != "hoa");
-
-            // Update counters & balance based on final result
             if (result == prediction)
             {
                 winCount++;
-                balance += 10;
+                player.Balance += betAmount;
             }
             else if (result == "hoa")
             {
@@ -99,19 +99,20 @@ namespace EIUBetApp.Controllers
             else
             {
                 lossCount++;
-                balance -= 10;
+                player.Balance -= betAmount;
             }
+
+            _context.SaveChanges();
 
             return Json(new
             {
                 dice,
                 sum,
                 result,
-                balance,
+                balance = player.Balance,
                 winCount,
                 lossCount
             });
         }
     }
 }
-
