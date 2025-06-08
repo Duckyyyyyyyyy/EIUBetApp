@@ -123,14 +123,17 @@ namespace EIUBetApp.Data
             var players = await _context.ManageRoom
                 .Where(r => r.RoomId == parsedRoomId && r.LeaveAt == null)
                 .Include(r => r.Player)
+                    .ThenInclude(p => p.User)
                 .Select(r => new
                 {
                     PlayerId = r.PlayerId,
-                    Balance = r.Player.Balance
+                    Balance = r.Player.Balance,
+                    Username = r.Player.User.Username
                 })
                 .ToListAsync();
 
             await Clients.Group(roomId).SendAsync("UpdatePlayerList", players);
         }
+
     }
 }
