@@ -45,8 +45,7 @@
                         </div>
                     }
                 </div>
-
-                <button class="btn btn-outline-light logout-btn" onclick="logout()">Logout</button>
+                <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
             </aside>
 
             <!-- Main Content -->
@@ -55,12 +54,16 @@
                 <div id="roomList">
                     @foreach (var room in Model.Item2)
                     {
-                        <div class="room-card d-flex justify-content-between align-items-center">
+                        <div class="room-card d-flex justify-content-between align-items-center mb-2">
                             <div>
                                 <h5>@room.RoomName</h5>
                                 <p class="mb-0">Room ID: @room.RoomId</p>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="joinRoom('@room.RoomId')">Join</button>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    onclick="joinRoom('@room.RoomId')"
+                                    aria-label="Join room @room.RoomName">
+                                Join
+                            </button>
                         </div>
                     }
                 </div>
@@ -73,34 +76,40 @@
             .withUrl("/betHub")
             .build();
 
-        // Start SignalR connection
         connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
 
-        // Join room by RoomId and PlayerId
-        async function joinRoom(roomId) {
+        connection.on("UserJoined", function (username) {
+            alert(`${username} has joined the room!`);
+        });
+
+        connection.on("UpdatePlayerList", function (players) {
+            console.log("Players currently in the room:", players);
+            // You could update the UI here dynamically if desired
+        });
+
+        function joinRoom(roomId) {
             const playerId = document.getElementById("playerId")?.value;
+
             if (!playerId) {
                 alert("You must be logged in to join a room.");
                 return;
             }
 
-            try {
-                // Call the JoinRoom hub method with roomId and playerId
-                await connection.invoke("JoinRoom", roomId, playerId);
-
-                // Redirect to the game room page
-                 window.location.href = `/Game/BauCua?roomId=${roomId}`;
-            } catch (err) {
-                console.error("Failed to join room:", err);
-                alert("Failed to join room. Please try again.");
-            }
+            connection.invoke("JoinRoom", roomId, playerId)
+                .then(() => {
+                    console.log("Successfully joined room:", roomId);
+                    // Optionally redirect to a room page:
+                     window.location.href = `/Game/BauCua?roomId=${roomId}`;
+                })
+                .catch(err => {
+                    console.error("Error joining room:", err.toString());
+                });
         }
 
-        // Example real-time notification when a user joins a room
-        connection.on("UserJoined", function (username) {
-            alert(`${username} has joined the room!`);
-            // Optionally update UI here with new user info
-        });
+        // Optional invite function stub if you want
+        function invite(username) {
+            alert(`Invite sent to ${username}`);
+        }
     </script>
 </body>
 </html>
