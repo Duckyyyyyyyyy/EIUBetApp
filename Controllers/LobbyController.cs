@@ -29,8 +29,8 @@ namespace EIUBetApp.Controllers
 
             ViewBag.CurrentPlayer = currentPlayer;
 
-            // Get all available players and rooms
-            var players = _context.Player.Include(p => p.User).Where(p => p.IsAvailable == true).ToList();
+            // Get all available players and rooms, user is not deleted
+            var players = _context.Player.Include(p => p.User).Where(p => p.IsAvailable == true && p.User.IsDeleted == false).ToList();
             var rooms = _context.Room.Where(r => r.GameId == gameId && r.IsAvailable == true).ToList();
 
             var model = new Tuple<IEnumerable<Player>, IEnumerable<Room>>(players, rooms);

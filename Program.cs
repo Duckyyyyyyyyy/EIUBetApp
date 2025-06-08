@@ -26,6 +26,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+
+    // Set cookie expiration time
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Valid for 60 minutes
+
+    // Optional: Reset expiration time on each request
+    options.SlidingExpiration = true;
 });
 
 // SignalR support

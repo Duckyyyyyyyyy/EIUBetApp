@@ -13,8 +13,6 @@ namespace EIUBetApp.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Thumbnail { get; set; }
-
-
         //Navigation
         public ICollection<Room> Rooms { get; set; }
         public ICollection<Logs> Logs { get; set; }
