@@ -44,8 +44,7 @@
                                     @player.User.Username
                                 </div>
                                 <span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
-
-                                <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
+                        @Html.Raw(player.OnlineStatus == true ? "<button class='btn btn-sm btn-outline-light' onclick=\"invite('" + player.User.Username + "')\">Invite</button>": "")
                             </div>
                         }
                     }
@@ -83,7 +82,7 @@
             .build();
 
         connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
-               
+
         connection.onreconnected(() => {
             console.log("Reconnected to SignalR hub");
             connection.invoke("UpdateOnlineStatus", playerId, true);
