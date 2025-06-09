@@ -213,13 +213,13 @@ body {
 /* Main Content Area */
 main {
     background: var(--retro-tan);
-/*    border-radius: 15px;*/
+    /*    border-radius: 15px;*/
     padding: 2rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     color: var(--retro-dark-brown);
-/*    position: relative;*/
-/*    overflow: hidden;
-    margin-top: 1rem;*/
+    /*    position: relative;*/
+    /*    overflow: hidden;*/
+    margin-top: 1rem;
 }
 
     main::before {
