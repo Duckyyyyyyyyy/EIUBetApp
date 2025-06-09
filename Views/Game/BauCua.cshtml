@@ -239,9 +239,14 @@
         const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/betHub")
+                    .withUrl("/betHub?playerId=" + playerId)
             .configureLogging(signalR.LogLevel.Information)
             .build();
+
+                    connection.onreconnected(() => {
+            console.log("Reconnected to SignalR hub");
+            connection.invoke("UpdateOnlineStatus", playerId, true);
+        });
 
         if (roomId && playerId) {
             connection.start()

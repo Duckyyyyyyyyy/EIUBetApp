@@ -11,6 +11,7 @@ namespace EIUBetApp.Data
 
         private static readonly ConcurrentDictionary<string, (Guid roomId, Guid playerId)> _connections = new();
         private static readonly ConcurrentDictionary<Guid, string> _playerConnections = new();
+        private static readonly ConcurrentDictionary<Guid, CancellationTokenSource> _disconnectTokens = new();
 
         public EIUBetAppHub(EIUBetAppContext context)
         {
@@ -19,7 +20,27 @@ namespace EIUBetApp.Data
 
         public override async Task OnConnectedAsync()
         {
-            // You may log or track connection here if needed
+            var httpContext = Context.GetHttpContext();
+            var playerIdStr = httpContext?.Request.Query["playerId"];
+
+            if (Guid.TryParse(playerIdStr, out Guid playerId))
+            {
+                _playerConnections[playerId] = Context.ConnectionId;
+
+                // Cancel any pending offline task
+                if (_disconnectTokens.TryRemove(playerId, out var cts))
+                    cts.Cancel();
+
+                var player = await _context.Player.FindAsync(playerId);
+                if (player != null)
+                {
+                    player.OnlineStatus = true;
+                    await _context.SaveChangesAsync();
+
+                    await Clients.All.SendAsync("PlayerOnlineStatusChanged", playerId, true);
+                }
+            }
+
             await base.OnConnectedAsync();
         }
 
@@ -27,31 +48,84 @@ namespace EIUBetApp.Data
         {
             var connectionId = Context.ConnectionId;
 
-            if (_connections.TryRemove(connectionId, out var roomPlayer))
+            Guid? playerId = null;
+
+            // Try to get playerId from _connections (players in rooms)
+            if (_connections.TryGetValue(connectionId, out var roomPlayer))
+                playerId = roomPlayer.playerId;
+            else
             {
-                var (roomId, playerId) = roomPlayer;
-                _playerConnections.TryRemove(playerId, out _);
+                // If not in _connections, try from _playerConnections (players not yet in rooms)
+                var playerEntry = _playerConnections.FirstOrDefault(p => p.Value == connectionId);
+                if (playerEntry.Key != Guid.Empty)
+                    playerId = playerEntry.Key;
+            }
 
-                var manageRoomEntry = await _context.ManageRoom
-                    .FirstOrDefaultAsync(r => r.RoomId == roomId && r.PlayerId == playerId && r.LeaveAt == null);
+            if (playerId != null)
+            {
+                var cts = new CancellationTokenSource();
+                _disconnectTokens[playerId.Value] = cts;
 
-                if (manageRoomEntry != null)
+                try
                 {
-                    manageRoomEntry.LeaveAt = DateTime.UtcNow;
+                    await Task.Delay(5000, cts.Token); // Wait 5 seconds to allow reconnect
+                }
+                catch (TaskCanceledException)
+                {
+                    // Reconnected, so do nothing and exit
+                    return;
+                }
 
-                    var player = await _context.Player.FindAsync(playerId);
-                    if (player != null)
+                _disconnectTokens.TryRemove(playerId.Value, out _);
+
+                // Check if the player reconnected with a different connection ID
+                if (_playerConnections.TryGetValue(playerId.Value, out var currentConnectionId))
+                {
+                    if (currentConnectionId != connectionId)
                     {
-                        player.ReadyStatus = false;
-                        player.OnlineStatus = false;
+                        // The player reconnected with a new connection ID,
+                        // so don't mark offline for this old connection
+                        return;
                     }
-                      
+                }
 
+                // Remove the disconnected connectionId from _connections (if exists)
+                _connections.TryRemove(connectionId, out var removedRoomPlayer);
+
+                // Remove player from _playerConnections only if this is the latest connection
+                _playerConnections.TryRemove(playerId.Value, out _);
+
+                // Update database player online status
+                var player = await _context.Player.FindAsync(playerId.Value);
+                if (player != null)
+                {
+                    player.OnlineStatus = false;
+                    player.ReadyStatus = false;
+                }
+
+                if (removedRoomPlayer != default)
+                {
+                    // Player was in a room
+                    var (roomId, _) = removedRoomPlayer;
+
+                    var manageRoomEntry = await _context.ManageRoom
+                        .FirstOrDefaultAsync(r => r.RoomId == roomId && r.PlayerId == playerId && r.LeaveAt == null);
+
+                    if (manageRoomEntry != null)
+                        manageRoomEntry.LeaveAt = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+
+                    await Groups.RemoveFromGroupAsync(connectionId, roomId.ToString());
+                    await SendPlayerListUpdate(roomId, roomId.ToString());
+                }
+                else
+                {
+                    // Player was not in any room
                     await _context.SaveChangesAsync();
                 }
 
-                await Groups.RemoveFromGroupAsync(connectionId, roomId.ToString());
-                await SendPlayerListUpdate(roomId, roomId.ToString());
+                await Clients.All.SendAsync("PlayerOnlineStatusChanged", playerId.Value, false);
             }
 
             await base.OnDisconnectedAsync(exception);

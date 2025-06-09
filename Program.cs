@@ -35,7 +35,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 });
 
 // SignalR support
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(15); // default: 30s
+    options.KeepAliveInterval = TimeSpan.FromSeconds(5);      // default: 15s
+});
 
 var app = builder.Build();
 

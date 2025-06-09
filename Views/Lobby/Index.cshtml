@@ -74,11 +74,17 @@
     </div>
 
     <script>
+        const playerId = document.getElementById("playerId")?.value;
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/betHub")
+            .withUrl("/betHub?playerId=" + playerId)
             .build();
 
         connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
+               
+        connection.onreconnected(() => {
+            console.log("Reconnected to SignalR hub");
+            connection.invoke("UpdateOnlineStatus", playerId, true);
+        });
 
         connection.on("UserJoined", function (username) {
             alert(`${username} has joined the room!`);
@@ -90,7 +96,7 @@
         });
 
         function joinRoom(roomId) {
-            const playerId = document.getElementById("playerId")?.value;
+            // const playerId = document.getElementById("playerId")?.value;
 
             if (!playerId) {
                 alert("You must be logged in to join a room.");
@@ -109,9 +115,41 @@
         }
 
         // Optional invite function stub if you want
-        function invite(username) {
-            alert(`Invite sent to ${username}`);
+                function invite(username) {
+            const playerId = document.getElementById("playerId")?.value;
+
+            if (!playerId) {
+                alert("You must be logged in to send an invite.");
+                return;
+            }
+
+            connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
+                .then(() => {
+                    console.log("Invite sent to", username);
+                })
+                .catch(err => {
+                    alert("Failed to send invite: " + err.toString());
+                });
         }
+                // Assuming 'connection' is your SignalR connection instance
+
+        connection.on("ReceiveInvite", function(fromUsername, roomId) {
+            // Show an invite message to the user
+            alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
+
+            // Optionally, ask the user if they want to join the room
+            if (confirm(`Do you want to join room ${roomId}?`)) {
+                const playerId = document.getElementById("playerId")?.value;  // or get it from wherever you store it
+
+                if (playerId) {
+                    connection.invoke("JoinRoom", roomId, playerId)
+                        .catch(err => console.error(err.toString()));
+                } else {
+                    alert("Player ID not found. Cannot join the room.");
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
