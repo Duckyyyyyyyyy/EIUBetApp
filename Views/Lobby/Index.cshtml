@@ -38,7 +38,7 @@
                     {
                         <div class="friend">
                             <div class="friend-name">
-                                <span class="status-dot"></span>
+                                @Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
                                 @player.User.Username
                             </div>
                             <p>@(player.OnlineStatus == true ? "Online" : "Offline")</p>

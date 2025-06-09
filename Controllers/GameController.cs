@@ -69,8 +69,8 @@ namespace EIUBetApp.Controllers
                 return Json(new { error = "Invalid prediction. Must be 'tai' or 'xiu'." });
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+            var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.PlayerId == Guid.Parse(playerId));
             if (player == null) return Json(new { error = "Player not found." });
 
             int[] dice;
