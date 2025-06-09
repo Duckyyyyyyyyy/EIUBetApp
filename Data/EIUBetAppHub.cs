@@ -41,7 +41,11 @@ namespace EIUBetApp.Data
 
                     var player = await _context.Player.FindAsync(playerId);
                     if (player != null)
+                    {
                         player.ReadyStatus = false;
+                        player.OnlineStatus = false;
+                    }
+                      
 
                     await _context.SaveChangesAsync();
                 }
@@ -116,6 +120,7 @@ namespace EIUBetApp.Data
 
             await Clients.Group(roomIdStr).SendAsync("UpdatePlayerList", players);
         }
+
         public async Task LeaveRoom(string roomId, string playerId)
         {
             var connectionId = Context.ConnectionId;

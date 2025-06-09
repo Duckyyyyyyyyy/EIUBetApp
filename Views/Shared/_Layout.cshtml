@@ -1,4 +1,8 @@
 ﻿@using System.Security.Claims
+@{
+	string? playerId = User.FindFirst("PlayerId")?.Value;
+}
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -72,5 +76,57 @@
 	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
 	@await RenderSectionAsync("Scripts", required: false)
+	@if (User.Identity.IsAuthenticated && !string.IsNullOrEmpty(playerId))
+	{
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+		<script>
+			const playerId = '@playerId';
+			let connection;
+
+			async function startConnection() {
+				connection = new signalR.HubConnectionBuilder()
+					.withUrl("/betHub")
+					.withAutomaticReconnect()
+					.build();
+
+				try {
+					await connection.start();
+					console.log("Connected to SignalR hub");
+
+					if (playerId) {
+						await connection.invoke("UpdateOnlineStatus", playerId, true);
+					}
+				} catch (err) {
+					console.error("SignalR connection failed:", err);
+				}
+			}
+
+			startConnection();
+
+			// Hook logout button
+			const logoutBtn = document.querySelector('a[href$="Logout"]');
+			if (logoutBtn) {
+				logoutBtn.addEventListener("click", async (e) => {
+					e.preventDefault();
+
+					if (connection && playerId) {
+						await connection.invoke("UpdateOnlineStatus", playerId, false);
+					}
+
+					setTimeout(() => {
+						window.location.href = logoutBtn.href;
+					}, 200);
+				});
+			}
+
+			// On tab close
+			window.addEventListener("beforeunload", function () {
+				if (playerId) {
+					navigator.sendBeacon("/OnlineStatus/SetOffline?playerId=" + playerId);
+				}
+			});
+		</script>
+	}
+
 </body>
 </html>
