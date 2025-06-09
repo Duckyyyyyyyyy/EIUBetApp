@@ -120,6 +120,29 @@
     </div>
 
     <div id="toast"></div>
+    <!-- Chat popup -->
+    <div id="chatBox" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 400px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    font-family: sans-serif;
+color:black;
+">
+        <div style="background-color: #007bff; color: white; padding: 10px; font-weight: bold;">💬 Room Chat</div>
+        <div id="chatMessages" style="flex: 1; padding: 10px; overflow-y: auto;"></div>
+        <div style="display: flex; border-top: 1px solid #ccc;">
+            <input id="chatInput" type="text" placeholder="Type message..." style="flex: 1; padding: 8px; border: none;" />
+            <button id="sendChatBtn" style="padding: 8px 12px; background-color: #007bff; color: white; border: none;">Send</button>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
@@ -261,7 +284,31 @@
         } else {
             console.error("Missing roomId or playerId");
         }
+                connection.on("ReceiveMessage", function (username, message, time) {
+            const msgDiv = document.createElement("div");
+            msgDiv.innerHTML = `<strong>${username}</strong> <small>${time}</small><br>${message}`;
+            msgDiv.style.marginBottom = "10px";
 
+            const chatMessages = document.getElementById("chatMessages");
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        document.getElementById("sendChatBtn").addEventListener("click", function () {
+            const input = document.getElementById("chatInput");
+            const msg = input.value.trim();
+            if (msg !== "") {
+                connection.invoke("SendMessageToRoom", roomId, '@ViewBag.Username', msg)
+                    .catch(err => console.error(err.toString()));
+                input.value = "";
+            }
+        });
+
+        document.getElementById("chatInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                document.getElementById("sendChatBtn").click();
+            }
+        });
         // Show toast only if server calls ShowToast
         connection.on("ShowToast", function(message) {
             showToast(message);
