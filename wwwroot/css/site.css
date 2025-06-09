@@ -65,7 +65,6 @@ body {
     padding: 1rem 0;
     position: relative;
 }
-
     .navbar::before {
         content: '♠ ♥ ♦ ♣';
         position: absolute;
@@ -77,7 +76,6 @@ body {
         letter-spacing: 8px;
         opacity: 0.7;
     }
-
 .navbar-brand {
     font-family: 'Bebas Neue', cursive !important;
     color: var(--retro-yellow) !important;

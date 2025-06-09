@@ -146,120 +146,120 @@ color:black;
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
-        const btn = document.querySelector(".btn");
-        const efx = document.querySelector(".bgeffect");
-        const diceContainers = [
-            document.querySelector("#dice1"),
-            document.querySelector("#dice2"),
-            document.querySelector("#dice3")
-        ];
-        const predictButtons = document.querySelectorAll(".predict-btn");
-        const resultDiv = document.getElementById("resultText");
+                const btn = document.querySelector(".btn");
+                const efx = document.querySelector(".bgeffect");
+                const diceContainers = [
+                    document.querySelector("#dice1"),
+                    document.querySelector("#dice2"),
+                    document.querySelector("#dice3")
+                ];
+                const predictButtons = document.querySelectorAll(".predict-btn");
+                const resultDiv = document.getElementById("resultText");
 
-        let userPrediction = null;
+                let userPrediction = null;
 
-        // Rotation positions
-        const rotations = {
-            4: [0, 0],
-            3: [0, 180],
-            2: [0, 90],
-            1: [0, -90],
-            5: [-90, 0],
-            6: [90, 0]
-        };
-
-        // Choose prediction
-        predictButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                userPrediction = parseInt(btn.dataset.value);
-                predictButtons.forEach(b => b.style.backgroundColor = "");
-                btn.style.backgroundColor = "#aaffaa"; // highlight selected
-            });
-        });
-
-        // Spin dice and check result
-                btn.addEventListener("click", () => {
-            if (!userPrediction) {
-                resultDiv.textContent = "Please choose a number to predict.";
-                return;
-            }
-
-            // Disable spin button to prevent multiple clicks
-            btn.disabled = true;
-
-            let results = [];
-
-            diceContainers.forEach((dice, index) => {
-                const rolled = Math.floor(Math.random() * 6) + 1;
-                const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
-                const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
-                const [rx, ry] = rotations[rolled];
-
-                dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
-                results.push(rolled);
-            });
-
-            const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
-            efx.style.backgroundColor = randomColor;
-            btn.style.backgroundColor = randomColor;
-            btn.textContent = "Rolling...";
-
-            setTimeout(() => {
-                btn.textContent = "Spin";
-                btn.disabled = false; // Enable button again
-
-                const correctCount = results.filter(num => num === userPrediction).length;
-
-                const nameMap = {
-                    1: "Bầu",
-                    2: "Nai",
-                    3: "Cua",
-                    4: "Cá",
-                    5: "Tôm",
-                    6: "Gà"
+                // Rotation positions
+                const rotations = {
+                    4: [0, 0],
+                    3: [0, 180],
+                    2: [0, 90],
+                    1: [0, -90],
+                    5: [-90, 0],
+                    6: [90, 0]
                 };
 
-                const resultNames = results.map(num => nameMap[num]);
+                // Choose prediction
+                predictButtons.forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        userPrediction = parseInt(btn.dataset.value);
+                        predictButtons.forEach(b => b.style.backgroundColor = "");
+                        btn.style.backgroundColor = "#aaffaa"; // highlight selected
+                    });
+                });
 
-                let message = `Ra: ${resultNames.join(", ")} — `;
-                if (correctCount === 0) {
-                    message += "❌ Không trúng.";
-                } else {
-                    message += `✅ Trúng ${correctCount} lần!`;
+                // Spin dice and check result
+                        btn.addEventListener("click", () => {
+                    if (!userPrediction) {
+                        resultDiv.textContent = "Please choose a number to predict.";
+                        return;
+                    }
+
+                    // Disable spin button to prevent multiple clicks
+                    btn.disabled = true;
+
+                    let results = [];
+
+                    diceContainers.forEach((dice, index) => {
+                        const rolled = Math.floor(Math.random() * 6) + 1;
+                        const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
+                        const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
+                        const [rx, ry] = rotations[rolled];
+
+                        dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
+                        results.push(rolled);
+                    });
+
+                    const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+                    efx.style.backgroundColor = randomColor;
+                    btn.style.backgroundColor = randomColor;
+                    btn.textContent = "Rolling...";
+
+                    setTimeout(() => {
+                        btn.textContent = "Spin";
+                        btn.disabled = false; // Enable button again
+
+                        const correctCount = results.filter(num => num === userPrediction).length;
+
+                        const nameMap = {
+                            1: "Bầu",
+                            2: "Nai",
+                            3: "Cua",
+                            4: "Cá",
+                            5: "Tôm",
+                            6: "Gà"
+                        };
+
+                        const resultNames = results.map(num => nameMap[num]);
+
+                        let message = `Ra: ${resultNames.join(", ")} — `;
+                        if (correctCount === 0) {
+                            message += "❌ Không trúng.";
+                        } else {
+                            message += `✅ Trúng ${correctCount} lần!`;
+                        }
+
+                        resultDiv.textContent = message;
+                    }, 1000);
+                });
+
+
+                // Toast display helper
+                function showToast(message) {
+                    const toast = document.getElementById("toast");
+                    toast.textContent = message;
+                    toast.classList.add("show");
+                    setTimeout(() => {
+                        toast.classList.remove("show");
+                    }, 3500);
                 }
 
-                resultDiv.textContent = message;
-            }, 1000);
-        });
+                        document.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("readyBtn")) {
+                        connection.invoke("SetReadyStatus", roomId, playerId, true)
+                            .then(() => {
+                                event.target.disabled = true;
+                                event.target.textContent = "Ready ✔";
+                            })
+                            .catch(err => {
+                                console.error("Error setting ready status:", err);
+                                showToast("Could not set ready status.");
+                            });
+                    }
+                });
 
-
-        // Toast display helper
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            toast.textContent = message;
-            toast.classList.add("show");
-            setTimeout(() => {
-                toast.classList.remove("show");
-            }, 3500);
-        }
-
-                document.addEventListener("click", function (event) {
-            if (event.target.classList.contains("readyBtn")) {
-                connection.invoke("SetReadyStatus", roomId, playerId, true)
-                    .then(() => {
-                        event.target.disabled = true;
-                        event.target.textContent = "Ready ✔";
-                    })
-                    .catch(err => {
-                        console.error("Error setting ready status:", err);
-                        showToast("Could not set ready status.");
-                    });
-            }
-        });
-
-        // Grab roomId and playerId from server ViewBag
-        const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
-        const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
+                // Grab roomId and playerId from server ViewBag
+                const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
+                const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
 
         const connection = new signalR.HubConnectionBuilder()
                     .withUrl("/betHub?playerId=" + playerId)
@@ -289,7 +289,7 @@ color:black;
             msgDiv.innerHTML = `<strong>${username}</strong> <small>${time}</small><br>${message}`;
             msgDiv.style.marginBottom = "10px";
 
-            const chatMessages = document.getElementById("chatMessages");
+                    const chatMessages = document.getElementById("chatMessages");
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
@@ -309,41 +309,41 @@ color:black;
                 document.getElementById("sendChatBtn").click();
             }
         });
-        // Show toast only if server calls ShowToast
+            // Show toast only if server calls ShowToast
         connection.on("ShowToast", function(message) {
             showToast(message);
         });
 
-        connection.on("UpdatePlayerList", function(players) {
-            const container = document.getElementById("playerContainer");
-            container.innerHTML = "";
+                connection.on("UpdatePlayerList", function(players) {
+                    const container = document.getElementById("playerContainer");
+                    container.innerHTML = "";
 
-            const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
+                    const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
 
-            console.log(players);
-            players.forEach(player => {
-                const playerIdLower = (player.playerId || "").trim().toLowerCase();
+                    console.log(players);
+                    players.forEach(player => {
+                        const playerIdLower = (player.playerId || "").trim().toLowerCase();
 
-                const div = document.createElement("div");
-                div.className = "user-card";
+                        const div = document.createElement("div");
+                        div.className = "user-card";
 
-                div.innerHTML = `
-                    <h4>${player.username || "Unknown User"}</h4>
-                    <p>Balance: ${player.balance}</p>
-                    <p class="status">${player.readyStatus}</p>
-                    ${playerIdLower === currentPlayerIdLower ? `
-                        <button class="readyBtn">Ready</button><br />
-                        <a href="/Home/Index">Quit</a>
-                    ` : ""}
-                `;
+                        div.innerHTML = `
+                            <h4>${player.username || "Unknown User"}</h4>
+                            <p>Balance: ${player.balance}</p>
+                            <p class="status">${player.readyStatus}</p>
+                            ${playerIdLower === currentPlayerIdLower ? `
+                                <button class="readyBtn">Ready</button><br />
+                                <a  class="btn btn-outline-danger" href="/Home/Index">Quit</a>
+                            ` : ""}
+                        `;
 
-                container.appendChild(div);
-            });
-        });
+                        container.appendChild(div);
+                    });
+                });
 
-      
-// });
-        // Your dice game JS code goes here (omitted for brevity)
+
+        // });
+                // Your dice game JS code goes here (omitted for brevity)
     </script>
 </body>
 </html>
