@@ -269,6 +269,7 @@ main.bg-light {
     color: var(--retro-dark-brown);
     min-height: 100vh;
     position: relative;
+    z-index:2;
 }
 
     main.bg-light::before {
