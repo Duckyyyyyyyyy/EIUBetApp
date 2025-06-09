@@ -41,7 +41,7 @@
                                 @Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
                                 @player.User.Username
                             </div>
-                            <p>@(player.OnlineStatus == true ? "Online" : "Offline")</p>
+                            <span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
 
                             <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
                         </div>
