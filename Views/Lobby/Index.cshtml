@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 </head>
 <body>
-    <div class="container-fluid vh-100">
+    <div class="container-fluid ">
         <div class="row h-100">
             <!-- Sidebar -->
             <aside class="col-md-3 sidebar d-flex flex-column">
@@ -49,8 +49,9 @@
                             </div>
                         }
                     }
+                    <a class="btn btn-outline-light logout-btn w-100" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
                 </div>
-                <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
+               
             </aside>
 
             <!-- Main Content -->
