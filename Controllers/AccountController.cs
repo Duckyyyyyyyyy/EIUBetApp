@@ -99,7 +99,7 @@ namespace EIUBetApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _context.User.Include(u=> u.Player).FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
@@ -135,7 +135,7 @@ namespace EIUBetApp.Controllers
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-            
+            TempData["PlayerId"] = user.Player?.PlayerId.ToString();
             return RedirectToAction("Index", "Home");
         }
 

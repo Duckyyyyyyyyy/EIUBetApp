@@ -41,12 +41,13 @@
                                 <span class="status-dot"></span>
                                 @player.User.Username
                             </div>
+                            <p>@(player.OnlineStatus == true ? "Online" : "Offline")</p>
+
                             <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
                         </div>
                     }
                 </div>
-
-                <button class="btn btn-outline-light logout-btn" onclick="logout()">Logout</button>
+                <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
             </aside>
 
             <!-- Main Content -->
@@ -55,12 +56,16 @@
                 <div id="roomList">
                     @foreach (var room in Model.Item2)
                     {
-                        <div class="room-card d-flex justify-content-between align-items-center">
+                        <div class="room-card d-flex justify-content-between align-items-center mb-2">
                             <div>
                                 <h5>@room.RoomName</h5>
                                 <p class="mb-0">Room ID: @room.RoomId</p>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="joinRoom('@room.RoomId')">Join</button>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    onclick="joinRoom('@room.RoomId')"
+                                    aria-label="Join room @room.RoomName">
+                                Join
+                            </button>
                         </div>
                     }
                 </div>
@@ -68,112 +73,45 @@
         </div>
     </div>
 
-    @* <script> *@
-    @*     const connection = new signalR.HubConnectionBuilder() *@
-    @*         .withUrl("/betHub") *@
-    @*         .build(); *@
-
-    @*     // Start SignalR connection *@
-    @*     connection.start().catch(err => console.error('SignalR Connection Error:', err.toString())); *@
-
-    @*     // Join room by RoomId and PlayerId *@
-    @*     async function joinRoom(roomId) { *@
-    @*         const playerId = document.getElementById("playerId")?.value; *@
-    @*         if (!playerId) { *@
-    @*             alert("You must be logged in to join a room."); *@
-    @*             return; *@
-    @*         } *@
-
-    @*         try { *@
-    @*             // Call the JoinRoom hub method with roomId and playerId *@
-    @*             await connection.invoke("JoinRoom", roomId, playerId); *@
-
-    @*             // Redirect to the game room page *@
-    @*              window.location.href = `/Game/BauCua?roomId=${roomId}`; *@
-    @*         } catch (err) { *@
-    @*             console.error("Failed to join room:", err); *@
-    @*             alert("Failed to join room. Please try again."); *@
-    @*         } *@
-    @*     } *@
-
-    @*     // Example real-time notification when a user joins a room *@
-    @*     connection.on("UserJoined", function (username) { *@
-    @*         alert(`${username} has joined the room!`); *@
-    @*         // Optionally update UI here with new user info *@
-    @*     }); *@
-
-
-    @*     //handle invite users *@
-    @*             function invite(username) { *@
-    @*         const currentUsername = document.getElementById("username")?.textContent; *@
-
-    @*         if (!currentUsername || !username) { *@
-    @*             alert("Invalid invite request."); *@
-    @*             return; *@
-    @*         } *@
-
-    @*         // Send the invite to the server via SignalR *@
-    @*         connection.invoke("SendInvite", currentUsername, username) *@
-    @*             .then(() => { *@
-    @*                 console.log(`Invitation sent to ${username}`); *@
-    @*             }) *@
-    @*             .catch(err => { *@
-    @*                 console.error("Failed to send invite:", err.toString()); *@
-    @*             }); *@
-    @*     } *@
-
-    @* </script> *@
-
-
     <script>
-        const username = document.getElementById("username")?.textContent?.trim() || "Guest";
-
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`/betHub?username=${encodeURIComponent(username)}`)
+            .withUrl("/betHub")
             .build();
 
-        // Start the connection
-        connection.start().catch(err => console.error("SignalR connection error:", err));
+        connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
 
-        // Join a room
-        async function joinRoom(roomId) {
+        connection.on("UserJoined", function (username) {
+            alert(`${username} has joined the room!`);
+        });
+
+        connection.on("UpdatePlayerList", function (players) {
+            console.log("Players currently in the room:", players);
+            // You could update the UI here dynamically if desired
+        });
+
+        function joinRoom(roomId) {
             const playerId = document.getElementById("playerId")?.value;
+
             if (!playerId) {
                 alert("You must be logged in to join a room.");
                 return;
             }
 
-            try {
-                await connection.invoke("JoinRoom", roomId, playerId);
-                window.location.href = `/Game/BauCua?roomId=${roomId}`;
-            } catch (err) {
-                console.error("Join failed:", err);
-            }
+            connection.invoke("JoinRoom", roomId, playerId)
+                .then(() => {
+                    console.log("Successfully joined room:", roomId);
+                    // Optionally redirect to a room page:
+                     window.location.href = `/Game/BauCua?roomId=${roomId}`;
+                })
+                .catch(err => {
+                    console.error("Error joining room:", err.toString());
+                });
         }
 
-        // Invite another user
-        function invite(toUsername) {
-            const fromUsername = document.getElementById("username")?.textContent?.trim();
-            if (!fromUsername || !toUsername) return;
-
-            connection.invoke("SendInvite", fromUsername, toUsername)
-                .catch(err => console.error("Invite failed:", err));
+        // Optional invite function stub if you want
+        function invite(username) {
+            alert(`Invite sent to ${username}`);
         }
-
-        // Handle receiving an invite
-        connection.on("ReceiveInvite", function (fromUsername) {
-            if (confirm(`${fromUsername} invited you to join a game. Accept?`)) {
-                alert("You accepted the invite! Redirecting...");
-                // You could redirect to a room or show available rooms
-            }
-        });
-
-        // Optional: handle player list updates
-        connection.on("UpdatePlayerList", function (players) {
-            console.log("Updated player list:", players);
-            // You can update UI here if needed
-        });
     </script>
-
 </body>
 </html>

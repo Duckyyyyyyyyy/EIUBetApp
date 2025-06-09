@@ -1,6 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Home";
 }
+@{
+    var playerId = TempData["PlayerId"]?.ToString();
+}
 @model List<EIUBetApp.Models.Game>
 
 <!DOCTYPE html>
@@ -61,6 +64,26 @@
         </div>
     }
 </div>
+    @if (!string.IsNullOrEmpty(playerId))
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+        <script>
+            const playerId = '@playerId';
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/betHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.start()
+                .then(() => {
+                    console.log("Connected to SignalR hub");
+                    connection.invoke("UpdateOnlineStatus", playerId, true)
+                        .catch(err => console.error(err.toString()));
+                })
+                .catch(err => console.error("SignalR connection failed:", err));
+        </script>
+    }
 
 </body>
 </html>

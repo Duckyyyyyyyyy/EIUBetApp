@@ -1,235 +1,297 @@
 ﻿@{
-	Layout = "_GameLayout";
+    Layout = "_GameLayout";
 }
 
 <!DOCTYPE html>
 <html>
 <head>
-	<title>3D Dice Game</title>
-	<link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
-	
+    <title>3D Dice Game</title>
+    <link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+    <style>
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s ease, visibility 0.5s ease 0.5s;
+        }
+
+            #toast.show {
+                visibility: visible;
+                opacity: 1;
+                transition-delay: 0s;
+            }
+    </style>
 </head>
 <body>
-	<div class="main-layout">
-		<!-- Sidebar -->
-		<aside class="sidebar" id="playerContainer"></aside>
+    <div class="main-layout">
+        <aside class="sidebar" id="playerContainer"></aside>
 
-		<!-- Game Section -->
-		<section class="game-section">
-			<div class="dice-wrapper">
-				<!-- Dice containers: dice1, dice2, dice3 -->
-				<div class="containerD" id="dice1">
-					<div class="left">
-						<img src="~/Assets/bau.png" alt="bau.png" />
-					</div>
-					<div class="right">
-						<img src="~/Assets/nai.png" alt="nai.png" />
-					</div>
-					<div class="front">
-						<img src="~/Assets/cua.png" alt="cua.png" />
-					</div>
-					<div class="back">
-						<img src="~/Assets/ca.png" alt="ca.png" />
-					</div>
-					<div class="up">
-						<img src="~/Assets/tom.png" alt="tom.png" />
-					</div>
-					<div class="down">
-						<img src="~/Assets/ga.png" alt="ga.png" />
-					</div>
-					
-				</div>
-				<div class="containerD" id="dice2">
-					<div class="left">
-						<img src="~/Assets/bau.png" alt="bau.png" />
-					</div>
-					<div class="right">
-						<img src="~/Assets/nai.png" alt="nai.png" />
-					</div>
-					<div class="front">
-						<img src="~/Assets/cua.png" alt="cua.png" />
-					</div>
-					<div class="back">
-						<img src="~/Assets/ca.png" alt="ca.png" />
-					</div>
-					<div class="up">
-						<img src="~/Assets/tom.png" alt="tom.png" />
-					</div>
-					<div class="down">
-						<img src="~/Assets/ga.png" alt="ga.png" />
-					</div>
-				</div>
-				<div class="containerD" id="dice3">
-					<div class="left">
-						<img src="~/Assets/bau.png" alt="bau.png" />
-					</div>
-					<div class="right">
-						<img src="~/Assets/nai.png" alt="nai.png" />
-					</div>
-					<div class="front">
-						<img src="~/Assets/cua.png" alt="cua.png" />
-					</div>
-					<div class="back">
-						<img src="~/Assets/ca.png" alt="ca.png" />
-					</div>
-					<div class="up">
-						<img src="~/Assets/tom.png" alt="tom.png" />
-					</div>
-					<div class="down">
-						<img src="~/Assets/ga.png" alt="ga.png" />
-					</div>
-				</div>
-			</div>
-			<!-- Prediction Buttons -->
-			<div class="prediction-buttons">
-				<button class="predict-btn" data-value="1">Bầu</button>
-				<button class="predict-btn" data-value="2">Nai</button>
-				<button class="predict-btn" data-value="3">Cua</button>
-				<button class="predict-btn" data-value="4">Cá</button>
-				<button class="predict-btn" data-value="5">Tôm</button>
-				<button class="predict-btn" data-value="6">gà</button>
-			</div>
-			<button class="btn" id="spinBtn">Spin</button>
-			<p id="resultText"></p>
-			<div class="bgeffect" id="bgeffect"></div>
-			<!-- Result Display -->
-			<div class="result" id="resultText"></div>
-		</section>
-	</div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-	<script>
-		const btn = document.querySelector(".btn");
-		const efx = document.querySelector(".bgeffect");
-		const diceContainers = [
-			document.querySelector("#dice1"),
-			document.querySelector("#dice2"),
-			document.querySelector("#dice3")
-		];
-		const predictButtons = document.querySelectorAll(".predict-btn");
-		const resultDiv = document.getElementById("resultText");
+        <section class="game-section">
+            <div class="dice-wrapper">
+                <!-- Dice containers: dice1, dice2, dice3 -->
+                <div class="containerD" id="dice1">
+                    <div class="left">
+                        <img src="~/Assets/bau.png" alt="bau.png" />
+                    </div>
+                    <div class="right">
+                        <img src="~/Assets/nai.png" alt="nai.png" />
+                    </div>
+                    <div class="front">
+                        <img src="~/Assets/cua.png" alt="cua.png" />
+                    </div>
+                    <div class="back">
+                        <img src="~/Assets/ca.png" alt="ca.png" />
+                    </div>
+                    <div class="up">
+                        <img src="~/Assets/tom.png" alt="tom.png" />
+                    </div>
+                    <div class="down">
+                        <img src="~/Assets/ga.png" alt="ga.png" />
+                    </div>
 
-		let userPrediction = null;
+                </div>
+                <div class="containerD" id="dice2">
+                    <div class="left">
+                        <img src="~/Assets/bau.png" alt="bau.png" />
+                    </div>
+                    <div class="right">
+                        <img src="~/Assets/nai.png" alt="nai.png" />
+                    </div>
+                    <div class="front">
+                        <img src="~/Assets/cua.png" alt="cua.png" />
+                    </div>
+                    <div class="back">
+                        <img src="~/Assets/ca.png" alt="ca.png" />
+                    </div>
+                    <div class="up">
+                        <img src="~/Assets/tom.png" alt="tom.png" />
+                    </div>
+                    <div class="down">
+                        <img src="~/Assets/ga.png" alt="ga.png" />
+                    </div>
+                </div>
+                <div class="containerD" id="dice3">
+                    <div class="left">
+                        <img src="~/Assets/bau.png" alt="bau.png" />
+                    </div>
+                    <div class="right">
+                        <img src="~/Assets/nai.png" alt="nai.png" />
+                    </div>
+                    <div class="front">
+                        <img src="~/Assets/cua.png" alt="cua.png" />
+                    </div>
+                    <div class="back">
+                        <img src="~/Assets/ca.png" alt="ca.png" />
+                    </div>
+                    <div class="up">
+                        <img src="~/Assets/tom.png" alt="tom.png" />
+                    </div>
+                    <div class="down">
+                        <img src="~/Assets/ga.png" alt="ga.png" />
+                    </div>
+                </div>
+            </div>
+            <!-- Prediction Buttons -->
+            <div class="prediction-buttons">
+                <button class="predict-btn" data-value="1">Bầu</button>
+                <button class="predict-btn" data-value="2">Nai</button>
+                <button class="predict-btn" data-value="3">Cua</button>
+                <button class="predict-btn" data-value="4">Cá</button>
+                <button class="predict-btn" data-value="5">Tôm</button>
+                <button class="predict-btn" data-value="6">gà</button>
+            </div>
+            <button class="btn" id="spinBtn">Spin</button>
+            <p id="resultText"></p>
+            <div class="bgeffect" id="bgeffect"></div>
+            <!-- Result Display -->
+            <div class="result" id="resultText"></div>
+        </section>
+    </div>
 
-		// Rotation positions
-		const rotations = {
-			4: [0, 0],
-			3: [0, 180],
-			2: [0, 90],
-			1: [0, -90],
-			5: [-90, 0],
-			6: [90, 0]
-		};
+    <div id="toast"></div>
 
-		// Choose prediction
-		predictButtons.forEach(btn => {
-			btn.addEventListener("click", () => {
-				userPrediction = parseInt(btn.dataset.value);
-				predictButtons.forEach(b => b.style.backgroundColor = "");
-				btn.style.backgroundColor = "#aaffaa"; // highlight selected
-			});
-		});
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const btn = document.querySelector(".btn");
+        const efx = document.querySelector(".bgeffect");
+        const diceContainers = [
+            document.querySelector("#dice1"),
+            document.querySelector("#dice2"),
+            document.querySelector("#dice3")
+        ];
+        const predictButtons = document.querySelectorAll(".predict-btn");
+        const resultDiv = document.getElementById("resultText");
 
-		// Spin dice and check result
-				btn.addEventListener("click", () => {
-			if (!userPrediction) {
-				resultDiv.textContent = "Please choose a number to predict.";
-				return;
-			}
+        let userPrediction = null;
 
-			// Disable spin button to prevent multiple clicks
-			btn.disabled = true;
+        // Rotation positions
+        const rotations = {
+            4: [0, 0],
+            3: [0, 180],
+            2: [0, 90],
+            1: [0, -90],
+            5: [-90, 0],
+            6: [90, 0]
+        };
 
-			let results = [];
+        // Choose prediction
+        predictButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                userPrediction = parseInt(btn.dataset.value);
+                predictButtons.forEach(b => b.style.backgroundColor = "");
+                btn.style.backgroundColor = "#aaffaa"; // highlight selected
+            });
+        });
 
-			diceContainers.forEach((dice, index) => {
-				const rolled = Math.floor(Math.random() * 6) + 1;
-				const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
-				const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
-				const [rx, ry] = rotations[rolled];
+        // Spin dice and check result
+                btn.addEventListener("click", () => {
+            if (!userPrediction) {
+                resultDiv.textContent = "Please choose a number to predict.";
+                return;
+            }
 
-				dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
-				results.push(rolled);
-			});
+            // Disable spin button to prevent multiple clicks
+            btn.disabled = true;
 
-			const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
-			efx.style.backgroundColor = randomColor;
-			btn.style.backgroundColor = randomColor;
-			btn.textContent = "Rolling...";
+            let results = [];
 
-			setTimeout(() => {
-				btn.textContent = "Spin";
-				btn.disabled = false; // Enable button again
+            diceContainers.forEach((dice, index) => {
+                const rolled = Math.floor(Math.random() * 6) + 1;
+                const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
+                const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
+                const [rx, ry] = rotations[rolled];
 
-				const correctCount = results.filter(num => num === userPrediction).length;
+                dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
+                results.push(rolled);
+            });
 
-				const nameMap = {
-					1: "Bầu",
-					2: "Nai",
-					3: "Cua",
-					4: "Cá",
-					5: "Tôm",
-					6: "Gà"
-				};
+            const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+            efx.style.backgroundColor = randomColor;
+            btn.style.backgroundColor = randomColor;
+            btn.textContent = "Rolling...";
 
-				const resultNames = results.map(num => nameMap[num]);
+            setTimeout(() => {
+                btn.textContent = "Spin";
+                btn.disabled = false; // Enable button again
 
-				let message = `Ra: ${resultNames.join(", ")} — `;
-				if (correctCount === 0) {
-					message += "❌ Không trúng.";
-				} else {
-					message += `✅ Trúng ${correctCount} lần!`;
-				}
+                const correctCount = results.filter(num => num === userPrediction).length;
 
-				resultDiv.textContent = message;
-			}, 1000);
-		});
+                const nameMap = {
+                    1: "Bầu",
+                    2: "Nai",
+                    3: "Cua",
+                    4: "Cá",
+                    5: "Tôm",
+                    6: "Gà"
+                };
+
+                const resultNames = results.map(num => nameMap[num]);
+
+                let message = `Ra: ${resultNames.join(", ")} — `;
+                if (correctCount === 0) {
+                    message += "❌ Không trúng.";
+                } else {
+                    message += `✅ Trúng ${correctCount} lần!`;
+                }
+
+                resultDiv.textContent = message;
+            }, 1000);
+        });
 
 
-		//signalR
-			const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
-		const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
+        // Toast display helper
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
 
-		const connection = new signalR.HubConnectionBuilder()
-			.withUrl("/betHub")
-			.configureLogging(signalR.LogLevel.Information)
-			.build();
+                document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("readyBtn")) {
+                connection.invoke("SetReadyStatus", roomId, playerId, true)
+                    .then(() => {
+                        event.target.disabled = true;
+                        event.target.textContent = "Ready ✔";
+                    })
+                    .catch(err => {
+                        console.error("Error setting ready status:", err);
+                        showToast("Could not set ready status.");
+                    });
+            }
+        });
 
-		if (!roomId || !playerId) {
-			console.error("Missing roomId or playerId");
-		} else {
-			connection.start()
-				.then(() => {
-					console.log("Connected to SignalR hub.");
-					return connection.invoke("JoinRoom", roomId, playerId);
-				})
-				.catch(err => console.error("SignalR connection error:", err));
-		}
+        // Grab roomId and playerId from server ViewBag
+        const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
+        const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
 
-		connection.on("UpdatePlayerList", function (players) {
-			const container = document.getElementById("playerContainer");
-			container.innerHTML = "";
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/betHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
 
-			players.forEach((player, index) => {
-				const div = document.createElement("div");
-				div.className = "user-card";
-				div.id = `user${index + 1}`;
+        if (roomId && playerId) {
+            connection.start()
+                .then(() => {
+                    console.log("Connected to SignalR hub.");
+                    return connection.invoke("JoinRoom", roomId, playerId);
+                })
+                .catch(err => {
+                    console.error("SignalR connection error:", err);
+                    // No toast shown here intentionally
+                });
+        } else {
+            console.error("Missing roomId or playerId");
+        }
 
-				div.innerHTML = `
-					<h4>User ${index + 1}</h4>
-					<p>Balance: ${player.PlayerId}</p>
-					<p class="status">Not Ready</p>
-					<p class="status">Waiting</p>
-					${player.PlayerId === playerId ? `
-						<button class="readyBtn">Ready</button>
-						<br />
-						<a href="/Home/Index">Quit</a>
-					` : ""}
-				`;
+        // Show toast only if server calls ShowToast
+        connection.on("ShowToast", function(message) {
+            showToast(message);
+        });
 
-				container.appendChild(div);
-			});
-		});
-	</script>
+        connection.on("UpdatePlayerList", function(players) {
+            const container = document.getElementById("playerContainer");
+            container.innerHTML = "";
+
+            const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
+
+            console.log(players);
+            players.forEach(player => {
+                const playerIdLower = (player.playerId || "").trim().toLowerCase();
+
+                const div = document.createElement("div");
+                div.className = "user-card";
+
+                div.innerHTML = `
+                    <h4>${player.username || "Unknown User"}</h4>
+                    <p>Balance: ${player.balance}</p>
+                    <p class="status">${player.readyStatus}</p>
+                    ${playerIdLower === currentPlayerIdLower ? `
+                        <button class="readyBtn">Ready</button><br />
+                        <a href="/Home/Index">Quit</a>
+                    ` : ""}
+                `;
+
+                container.appendChild(div);
+            });
+        });
+
+      
+// });
+        // Your dice game JS code goes here (omitted for brevity)
+    </script>
 </body>
-
 </html>
