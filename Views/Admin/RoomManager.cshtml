@@ -49,6 +49,17 @@
                     <td>@room.Game?.Name</td>
                     <td>@room.Capacity</td>
                     <td>@(room.IsAvailable ? "Yes" : "No")</td>
+                    <td>
+                        <form asp-action="ToggleRoomStatus" asp-controller="Admin" method="post">
+                            <input type="hidden" name="roomId" value="@room.RoomId" />
+                            <input type="hidden" name="isDeleted" value="@(room.IsDeleted ? "false" : "true")" />
+                            <button class="btn btn-sm @(room.IsDeleted ? "btn-success" : "btn-warning")">
+                                @(room.IsDeleted ? "Activate" : "Hide")
+                            </button>
+                        </form>
+                    </td>
+
+
                 </tr>
             }
         </tbody>

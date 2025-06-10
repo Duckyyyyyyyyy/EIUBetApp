@@ -131,6 +131,65 @@ namespace EIUBetApp.Data
             await base.OnDisconnectedAsync(exception);
         }
 
+        //public async Task JoinRoom(string roomId, string playerId)
+        //{
+        //    var connectionId = Context.ConnectionId;
+        //    var parsedRoomId = Guid.Parse(roomId);
+        //    var parsedPlayerId = Guid.Parse(playerId);
+
+        //    var maxCapacity = await _context.Room
+        //        .Where(r => r.RoomId == parsedRoomId)
+        //        .Select(r => r.Capacity)
+        //        .FirstOrDefaultAsync();
+
+        //    var currentCount = await _context.ManageRoom
+        //        .CountAsync(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null);
+
+        //    if (currentCount >= (maxCapacity -1))
+        //        throw new HubException("Room is full. Please try another room.");
+
+        //    _connections[connectionId] = (parsedRoomId, parsedPlayerId);
+        //    _playerConnections[parsedPlayerId] = connectionId;
+
+        //    var existingEntry = await _context.ManageRoom
+        //        .Where(r => r.RoomId == parsedRoomId && r.PlayerId == parsedPlayerId)
+        //        .OrderByDescending(r => r.JoinAt)
+        //        .FirstOrDefaultAsync();
+
+        //    if (existingEntry == null)
+        //    {
+        //        _context.ManageRoom.Add(new ManageRoom
+        //        {
+        //            PlayerId = parsedPlayerId,
+        //            RoomId = parsedRoomId,
+        //            JoinAt = DateTime.UtcNow
+        //        });
+        //    }
+        //    else if (existingEntry.LeaveAt != null)
+        //    {
+        //        existingEntry.JoinAt = DateTime.UtcNow;
+        //        existingEntry.LeaveAt = null;
+        //        _context.ManageRoom.Update(existingEntry);
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    await Groups.AddToGroupAsync(connectionId, roomId);
+        //    await SendPlayerListUpdate(parsedRoomId, roomId);
+
+        //    // 🟡 Return room data to caller
+        //    var room = await _context.Room
+        //        .Where(r => r.RoomId == parsedRoomId)
+        //        .Select(r => new
+        //        {
+        //            RoomId = r.RoomId,
+        //            GameId = r.GameId,
+        //            GameName = r.Game.Name
+        //        })
+        //        .FirstOrDefaultAsync();
+
+        //    await Clients.Caller.SendAsync("ReceiveRoomInfo", room);
+        //}
+
         public async Task JoinRoom(string roomId, string playerId)
         {
             var connectionId = Context.ConnectionId;
@@ -145,7 +204,7 @@ namespace EIUBetApp.Data
             var currentCount = await _context.ManageRoom
                 .CountAsync(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null);
 
-            if (currentCount >= maxCapacity)
+            if (currentCount >= (maxCapacity - 1))
                 throw new HubException("Room is full. Please try another room.");
 
             _connections[connectionId] = (parsedRoomId, parsedPlayerId);
@@ -175,6 +234,19 @@ namespace EIUBetApp.Data
             await _context.SaveChangesAsync();
             await Groups.AddToGroupAsync(connectionId, roomId);
             await SendPlayerListUpdate(parsedRoomId, roomId);
+
+            // 🟡 Return room data to caller
+            var room = await _context.Room
+                .Where(r => r.RoomId == parsedRoomId)
+                .Select(r => new
+                {
+                    RoomId = r.RoomId,
+                    GameId = r.GameId,
+                    GameName = r.Game.Name
+                })
+                .FirstOrDefaultAsync();
+
+            await Clients.Caller.SendAsync("ReceiveRoomInfo", room);
         }
 
         private async Task SendPlayerListUpdate(Guid roomId, string roomIdStr)
@@ -238,23 +310,28 @@ namespace EIUBetApp.Data
 
         public async Task SendInvite(string fromUsername, string toUsername)
         {
+            var fromUser = await _context.User.FirstOrDefaultAsync(u => u.Username == fromUsername);
             var toUser = await _context.User.FirstOrDefaultAsync(u => u.Username == toUsername);
-            if (toUser == null)
+
+            if (fromUser == null || toUser == null)
             {
                 await Clients.Caller.SendAsync("InviteFailed", toUsername, "User not found.");
                 return;
             }
 
+            var fromPlayer = await _context.Player.FirstOrDefaultAsync(p => p.UserId == fromUser.UserId);
             var toPlayer = await _context.Player.FirstOrDefaultAsync(p => p.UserId == toUser.UserId);
-            if (toPlayer == null)
+
+            if (fromPlayer == null || toPlayer == null)
             {
                 await Clients.Caller.SendAsync("InviteFailed", toUsername, "Player not found.");
                 return;
             }
 
-            if (!_playerConnections.TryGetValue(toPlayer.PlayerId, out var targetConnection))
+            if (!_playerConnections.TryGetValue(toPlayer.PlayerId, out var targetConnection) ||
+                !_playerConnections.TryGetValue(fromPlayer.PlayerId, out var senderConnection))
             {
-                await Clients.Caller.SendAsync("InviteFailed", toUsername, "Player is not online.");
+                await Clients.Caller.SendAsync("InviteFailed", toUsername, "One of the players is not online.");
                 return;
             }
 
@@ -268,33 +345,34 @@ namespace EIUBetApp.Data
                 throw new HubException("No available rooms to invite player.");
             }
 
-            var existingEntry = await _context.ManageRoom
-                .FirstOrDefaultAsync(mr => mr.PlayerId == toPlayer.PlayerId && mr.RoomId == availableRoom.RoomId && mr.LeaveAt == null);
+            // Add fromPlayer to room if not already in
+            var fromEntry = await _context.ManageRoom
+                .FirstOrDefaultAsync(mr => mr.PlayerId == fromPlayer.PlayerId && mr.RoomId == availableRoom.RoomId && mr.LeaveAt == null);
 
-            if (existingEntry == null)
+            if (fromEntry == null)
             {
                 _context.ManageRoom.Add(new ManageRoom
                 {
-                    PlayerId = toPlayer.PlayerId,
+                    PlayerId = fromPlayer.PlayerId,
                     RoomId = availableRoom.RoomId,
-                    JoinAt = DateTime.UtcNow
+                    JoinAt = DateTime.UtcNow,
+                    LeaveAt = null,
                 });
-            }
-            else
-            {
-                existingEntry.JoinAt = DateTime.UtcNow;
-                existingEntry.LeaveAt = null;
-                _context.ManageRoom.Update(existingEntry);
             }
 
             await _context.SaveChangesAsync();
 
-            _connections[targetConnection] = (availableRoom.RoomId, toPlayer.PlayerId);
-            _playerConnections[toPlayer.PlayerId] = targetConnection;
+            // Update tracking for inviter only
+            _connections[senderConnection] = (availableRoom.RoomId, fromPlayer.PlayerId);
+            _playerConnections[fromPlayer.PlayerId] = senderConnection;
 
-            await Groups.AddToGroupAsync(targetConnection, availableRoom.RoomId.ToString());
+            // Add inviter to SignalR group
+            await Groups.AddToGroupAsync(senderConnection, availableRoom.RoomId.ToString());
+
+            // Notify invitee (don't join room yet)
             await Clients.Client(targetConnection).SendAsync("ReceiveInvite", fromUsername, availableRoom.RoomId.ToString());
 
+            // Notify inviter
             await Clients.Caller.SendAsync("InviteSentSuccess", toUsername, availableRoom.RoomId.ToString());
         }
 
@@ -320,5 +398,32 @@ namespace EIUBetApp.Data
             // gui tin nhan den mn trong room
             await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
         }
+
+        // tao phong moi
+        public static class HubExtensions
+        {
+            public static async Task NotifyNewRoomCreated(IHubContext<EIUBetAppHub> hubContext, Room room, Game game)
+            {
+                await hubContext.Clients.All.SendAsync("NewRoomAdded", new
+                {
+                    roomId = room.RoomId,
+                    roomName = room.RoomName,
+                    capacity = room.Capacity,
+                    gameName = game?.Name ?? "Unknown"
+                });
+            }
+
+            //public static async Task NotifyRoomDeleted(IHubContext<EIUBetAppHub> hubContext, Guid roomId)
+            //{
+            //    await hubContext.Clients.All.SendAsync("RoomDeleted", roomId);
+            //}
+            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted)
+            {
+                await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, isDeleted);
+            }
+
+        }
+
+
     }
 }

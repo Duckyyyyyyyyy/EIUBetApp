@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using static EIUBetApp.Data.EIUBetAppHub;
 
 namespace EIUBetApp.Controllers
 {
@@ -11,9 +12,11 @@ namespace EIUBetApp.Controllers
     public class AdminController : Controller
     {
         private readonly EIUBetAppContext _context;
-        public AdminController(EIUBetAppContext context)
+        private readonly IHubContext<EIUBetAppHub> _hubContext;
+        public AdminController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
         public IActionResult Index()
         {
@@ -46,7 +49,7 @@ namespace EIUBetApp.Controllers
 
         // tao phong
         [HttpPost]
-        public IActionResult CreateRoom(string RoomName, int Capacity, Guid GameId)
+        public async Task<IActionResult> CreateRoom(string RoomName, int Capacity, Guid GameId)
         {
             var newRoom = new Room
             {
@@ -59,10 +62,47 @@ namespace EIUBetApp.Controllers
             };
 
             _context.Room.Add(newRoom);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            var game = await _context.Game.FindAsync(GameId);
+
+            // ✅ Gọi thông qua method trung gian (HubExtensions)
+            await HubExtensions.NotifyNewRoomCreated(_hubContext, newRoom, game);
 
             return RedirectToAction("RoomManager");
         }
+        //[HttpPost]
+        //public async Task<IActionResult> DeleteRoom(Guid roomId)
+        //{
+        //    var room = await _context.Room.FindAsync(roomId);
+        //    if (room != null)
+        //    {
+        //        _context.Room.Remove(room);
+        //        await _context.SaveChangesAsync();
+
+        //        // Gửi signalR thông báo xóa phòng
+        //        await HubExtensions.NotifyRoomDeleted(_hubContext, roomId);
+        //    }
+
+        //    return RedirectToAction("RoomManager");
+        //}
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleRoomStatus(Guid roomId, bool isDeleted)
+        {
+            var room = await _context.Room.FindAsync(roomId);
+            if (room != null)
+            {
+                room.IsDeleted = isDeleted;
+                await _context.SaveChangesAsync();
+
+                // Gửi realtime tới client để cập nhật UI
+                await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, isDeleted);
+            }
+
+            return RedirectToAction("RoomManager");
+        }
+
 
         // ban may thk lol hack
         //[HttpPost]
