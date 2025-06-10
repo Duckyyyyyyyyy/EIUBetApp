@@ -145,7 +145,7 @@ namespace EIUBetApp.Data
             var currentCount = await _context.ManageRoom
                 .CountAsync(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null);
 
-            if (currentCount >= (maxCapacity -1))
+            if (currentCount >= maxCapacity)
                 throw new HubException("Room is full. Please try another room.");
 
             _connections[connectionId] = (parsedRoomId, parsedPlayerId);
@@ -335,17 +335,14 @@ namespace EIUBetApp.Data
                 });
             }
 
-            //public static async Task NotifyRoomDeleted(IHubContext<EIUBetAppHub> hubContext, Guid roomId)
-            //{
-            //    await hubContext.Clients.All.SendAsync("RoomDeleted", roomId);
-            //}
-            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted)
+
+          
+            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted, Room? room = null, Game? game = null)
             {
                 await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, isDeleted);
             }
 
         }
-
 
     }
 }

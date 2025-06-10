@@ -75,128 +75,110 @@
         </div>
     </div>
 
-    <script>
-        const playerId = document.getElementById("playerId")?.value;
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/betHub?playerId=" + playerId)
-            .build();
+   <script>
+    const playerId = document.getElementById("playerId")?.value;
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/betHub?playerId=" + playerId)
+        .build();
 
-        connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
+    connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
 
-        connection.onreconnected(() => {
-            console.log("Reconnected to SignalR hub");
-            connection.invoke("UpdateOnlineStatus", playerId, true);
-        });
+    connection.onreconnected(() => {
+        console.log("Reconnected to SignalR hub");
+        connection.invoke("UpdateOnlineStatus", playerId, true);
+    });
 
-        connection.on("UserJoined", function (username) {
-            alert(`${username} has joined the room!`);
-        });
+    connection.on("UserJoined", function (username) {
+        alert(`${username} has joined the room!`);
+    });
 
-        connection.on("UpdatePlayerList", function (players) {
-            console.log("Players currently in the room:", players);
-            // You could update the UI here dynamically if desired
-        });
+    connection.on("UpdatePlayerList", function (players) {
+        console.log("Players currently in the room:", players);
+    });
 
-        function joinRoom(roomId) {
-            // const playerId = document.getElementById("playerId")?.value;
-
-            if (!playerId) {
-                alert("You must be logged in to join a room.");
-                return;
-            }
-
-            connection.invoke("JoinRoom", roomId, playerId)
-                .then(() => {
-                    console.log("Successfully joined room:", roomId);
-                    // Optionally redirect to a room page:
-                     window.location.href = `/Game/BauCua?roomId=${roomId}`;
-                })
-                .catch(err => {
-                    console.error("Error joining room:", err.toString());
-                     window.location.href = '/Home/Index';
-                });
+    function joinRoom(roomId) {
+        if (!playerId) {
+            alert("You must be logged in to join a room.");
+            return;
         }
 
-        // Optional invite function stub if you want
-                function invite(username) {
-            const playerId = document.getElementById("playerId")?.value;
-
-            if (!playerId) {
-                alert("You must be logged in to send an invite.");
-                return;
-            }
-
-            connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
-                .then(() => {
-                    console.log("Invite sent to", username);
-                })
-                .catch(err => {
-                    alert("Failed to send invite: " + err.toString());
-                });
-        }
-                // Assuming 'connection' is your SignalR connection instance
-
-        connection.on("ReceiveInvite", function(fromUsername, roomId) {
-            // Show an invite message to the user
-            alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
-
-            // Optionally, ask the user if they want to join the room
-            if (confirm(`Do you want to join room ${roomId}?`)) {
-                const playerId = document.getElementById("playerId")?.value;  // or get it from wherever you store it
-
-                if (playerId) {
-                    connection.invoke("JoinRoom", roomId, playerId)
-                        .catch(err => console.error(err.toString()));
-                } else {
-                    alert("Player ID not found. Cannot join the room.");
-                }
-            }
-        });
-                connection.on("NewRoomAdded", function(room) {
-            const container = document.getElementById("roomList");
-            const div = document.createElement("div");
-            div.className = "room-card d-flex justify-content-between align-items-center mb-2";
-
-            div.innerHTML = `
-                <div>
-                    <h5>${room.roomName}</h5>
-                    <p class="mb-0">Room ID: ${room.roomId}</p>
-                </div>
-                <button type="button" class="btn btn-sm btn-primary"
-                        onclick="joinRoom('${room.roomId}')">
-                    Join
-                </button>
-            `;
-
-            container.appendChild(div);
-        });
-        //         connection.on("RoomDeleted", function(roomId) {
-        //     const roomElements = document.querySelectorAll("#roomList .room-card");
-        //     roomElements.forEach(el => {
-        //         const idText = el.querySelector("p.mb-0")?.innerText || "";
-        //         if (idText.includes(roomId)) {
-        //             el.remove();
-        //         }
-        //     });
-        // });
-                connection.on("RoomVisibilityChanged", function(roomId, isDeleted) {
-            const roomElements = document.querySelectorAll("#roomList .room-card");
-            roomElements.forEach(el => {
-                const idText = el.querySelector("p.mb-0")?.innerText || "";
-                if (idText.includes(roomId)) {
-                    if (isDeleted) {
-                        el.remove(); // Ẩn khỏi giao diện
-                    } else {
-                        // Optional: reload phòng mới hoạt động lại (tùy chọn)
-                        el.reload(); // đơn giản
-                    }
-                }
+        connection.invoke("JoinRoom", roomId, playerId)
+            .then(() => {
+                console.log("Successfully joined room:", roomId);
+                window.location.href = `/Game/BauCua?roomId=${roomId}`;
+            })
+            .catch(err => {
+                console.error("Error joining room:", err.toString());
             });
+    }
+
+    function invite(username) {
+        const fromUsername = document.getElementById("username")?.textContent;
+
+        if (!playerId) {
+            alert("You must be logged in to send an invite.");
+            return;
+        }
+
+        connection.invoke("SendInvite", fromUsername, username)
+            .then(() => {
+                console.log("Invite sent to", username);
+            })
+            .catch(err => {
+                alert("Failed to send invite: " + err.toString());
+            });
+    }
+
+    connection.on("ReceiveInvite", function (fromUsername, roomId) {
+        alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
+
+        if (confirm(`Do you want to join room ${roomId}?`)) {
+            if (playerId) {
+                connection.invoke("JoinRoom", roomId, playerId)
+                    .catch(err => console.error(err.toString()));
+            } else {
+                alert("Player ID not found. Cannot join the room.");
+            }
+        }
+    });
+
+    connection.on("InviteSentSuccess", function (toUsername, roomId) {
+        console.log("InviteSentSuccess received:", toUsername, roomId);
+        connection.invoke("JoinRoom", roomId, playerId)
+            .catch(err => console.error(err.toString()));
+    });
+
+    connection.on("NewRoomAdded", function (room) {
+        const container = document.getElementById("roomList");
+        const div = document.createElement("div");
+        div.className = "room-card d-flex justify-content-between align-items-center mb-2";
+
+        div.innerHTML = `
+            <div>
+                <h5>${room.roomName}</h5>
+                <p class="mb-0">Room ID: ${room.roomId}</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary"
+                    onclick="joinRoom('${room.roomId}')">
+                Join
+            </button>
+        `;
+
+        container.appendChild(div);
+    });
+
+    connection.on("RoomVisibilityChanged", function (roomId, isDeleted) {
+        const roomElements = document.querySelectorAll("#roomList .room-card");
+        roomElements.forEach(el => {
+            const idText = el.querySelector("p.mb-0")?.innerText || "";
+            if (idText.includes(roomId)) {
+                if (isDeleted) {
+                    el.remove();
+                }
+            }
         });
+    });
+</script>
 
-
-
-
-    </script>
 </body>
 </html>

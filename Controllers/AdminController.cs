@@ -13,10 +13,9 @@ namespace EIUBetApp.Controllers
     {
         private readonly EIUBetAppContext _context;
         private readonly IHubContext<EIUBetAppHub> _hubContext;
-        public AdminController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
+        public AdminController(EIUBetAppContext context)
         {
             _context = context;
-            _hubContext = hubContext;
         }
         public IActionResult Index()
         {
@@ -49,7 +48,7 @@ namespace EIUBetApp.Controllers
 
         // tao phong
         [HttpPost]
-        public async Task<IActionResult> CreateRoom(string RoomName, int Capacity, Guid GameId)
+        public IActionResult CreateRoom(string RoomName, int Capacity, Guid GameId)
         {
             var newRoom = new Room
             {
@@ -62,31 +61,12 @@ namespace EIUBetApp.Controllers
             };
 
             _context.Room.Add(newRoom);
-            await _context.SaveChangesAsync();
-
-            var game = await _context.Game.FindAsync(GameId);
-
-            // ✅ Gọi thông qua method trung gian (HubExtensions)
-            await HubExtensions.NotifyNewRoomCreated(_hubContext, newRoom, game);
+            _context.SaveChanges();
 
             return RedirectToAction("RoomManager");
         }
-        //[HttpPost]
-        //public async Task<IActionResult> DeleteRoom(Guid roomId)
-        //{
-        //    var room = await _context.Room.FindAsync(roomId);
-        //    if (room != null)
-        //    {
-        //        _context.Room.Remove(room);
-        //        await _context.SaveChangesAsync();
 
-        //        // Gửi signalR thông báo xóa phòng
-        //        await HubExtensions.NotifyRoomDeleted(_hubContext, roomId);
-        //    }
-
-        //    return RedirectToAction("RoomManager");
-        //}
-
+       
         [HttpPost]
         public async Task<IActionResult> ToggleRoomStatus(Guid roomId, bool isDeleted)
         {
@@ -103,23 +83,6 @@ namespace EIUBetApp.Controllers
             return RedirectToAction("RoomManager");
         }
 
-
-        // ban may thk lol hack
-        //[HttpPost]
-        //public async Task<IActionResult> TogglePlayerAvailability(Guid playerId, bool status)
-        //{
-        //    var player = await _context.Player.FindAsync(playerId);
-        //    if (player != null)
-        //    {
-        //        player.IsAvailable = status;
-        //        await _context.SaveChangesAsync();
-
-        //        // Gửi signalR nếu muốn thông báo realtime
-        //        await _context.Clients.All.SendAsync("PlayerBanned", playerId, !status); // true = bị cấm
-        //    }
-
-        //    return RedirectToAction("PlayerManager");
-        //}
 
     }
 }
