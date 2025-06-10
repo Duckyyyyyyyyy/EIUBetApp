@@ -236,6 +236,11 @@ namespace EIUBetApp.Data
             await Clients.All.SendAsync("PlayerOnlineStatusChanged", playerId, isOnline);
         }
 
+        public async Task SendMessageToRoom(string roomId, string username, string message)
+        {
+            // gui tin nhan den mn trong room
+            await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
+        }
 
     }
 }
