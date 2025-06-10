@@ -320,7 +320,6 @@ namespace EIUBetApp.Data
             // gui tin nhan den mn trong room
             await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
         }
-<<<<<<< HEAD
 
         // tao phong moi
         public static class HubExtensions
@@ -336,11 +335,7 @@ namespace EIUBetApp.Data
                 });
             }
 
-            //public static async Task NotifyRoomDeleted(IHubContext<EIUBetAppHub> hubContext, Guid roomId)
-            //{
-            //    await hubContext.Clients.All.SendAsync("RoomDeleted", roomId);
-            //}
-
+          
             public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted, Room? room = null, Game? game = null)
             {
                 if (isDeleted)
@@ -363,8 +358,5 @@ namespace EIUBetApp.Data
 
         }
 
-
-=======
->>>>>>> parent of f1bbc8f (done invite)
     }
 }
