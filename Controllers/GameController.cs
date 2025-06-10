@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles = "Player,Admin")]
+    [Authorize(Roles = "Player")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -20,8 +20,11 @@ namespace EIUBetApp.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(Guid RoomId)
         {
+            var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
+            if (room == null) return NotFound();
+
             var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");
@@ -41,13 +44,13 @@ namespace EIUBetApp.Controllers
         public IActionResult BauCua(Guid RoomId)
         {
             var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
-            if (room == null) return NotFound();            
+            if (room == null) return NotFound();
 
             var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");
             var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            
+
             var player = _context.Player.SingleOrDefault(p => p.PlayerId == Guid.Parse(playerId));
             if (player == null) return NotFound();
 

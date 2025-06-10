@@ -1,5 +1,6 @@
 ﻿@model List<EIUBetApp.Models.Room>
 @{
+    Layout = "_AdminLayout";
     ViewData["Title"] = "Room Manager";
     var games = ViewBag.Games as List<EIUBetApp.Models.Game>;
 }
@@ -7,8 +8,7 @@
 <div class="container mt-4">
     <h3>🏠 Room Manager</h3>
 
-    <!-- Create Room Form -->
-    <form asp-action="CreateRoom" asp-controller="Admin" method="post" class="row g-3 border p-3 rounded shadow-sm mb-4">
+    <form asp-action="CreateRoom" method="post" class="row g-3 border p-3 rounded shadow-sm mb-4">
         <div class="col-md-4">
             <label class="form-label">Room Name</label>
             <input type="text" name="RoomName" class="form-control" required />
@@ -31,14 +31,14 @@
         </div>
     </form>
 
-    <!-- Existing Rooms Table -->
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th>Room Name</th>
                 <th>Game</th>
                 <th>Capacity</th>
-                <th>Available?</th>
+                <th>Visible</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -48,7 +48,16 @@
                     <td>@room.RoomName</td>
                     <td>@room.Game?.Name</td>
                     <td>@room.Capacity</td>
-                    <td>@(room.IsAvailable ? "Yes" : "No")</td>
+                    <td>@(room.IsDeleted ? "❌ Hidden" : "✅ Visible")</td>
+                    <td>
+                        <form asp-action="ToggleRoomStatus" method="post">
+                            <input type="hidden" name="roomId" value="@room.RoomId" />
+                            <input type="hidden" name="isDeleted" value="@(room.IsDeleted ? "false" : "true")" />
+                            <button class="btn btn-sm @(room.IsDeleted ? "btn-success" : "btn-warning")">
+                                @(room.IsDeleted ? "Activate" : "Hide")
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

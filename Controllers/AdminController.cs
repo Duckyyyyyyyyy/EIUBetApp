@@ -13,9 +13,10 @@ namespace EIUBetApp.Controllers
     {
         private readonly EIUBetAppContext _context;
         private readonly IHubContext<EIUBetAppHub> _hubContext;
-        public AdminController(EIUBetAppContext context)
+        public AdminController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
         public IActionResult Index()
         {
@@ -48,7 +49,7 @@ namespace EIUBetApp.Controllers
 
         // tao phong
         [HttpPost]
-        public IActionResult CreateRoom(string RoomName, int Capacity, Guid GameId)
+        public async Task<IActionResult> CreateRoom(string RoomName, int Capacity, Guid GameId)
         {
             var newRoom = new Room
             {
@@ -61,12 +62,14 @@ namespace EIUBetApp.Controllers
             };
 
             _context.Room.Add(newRoom);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            var game = await _context.Game.FindAsync(GameId);
+            await HubExtensions.NotifyNewRoomCreated(_hubContext, newRoom, game);
 
             return RedirectToAction("RoomManager");
         }
 
-       
         [HttpPost]
         public async Task<IActionResult> ToggleRoomStatus(Guid roomId, bool isDeleted)
         {
@@ -76,13 +79,18 @@ namespace EIUBetApp.Controllers
                 room.IsDeleted = isDeleted;
                 await _context.SaveChangesAsync();
 
-                // Gửi realtime tới client để cập nhật UI
-                await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, isDeleted);
+                if (isDeleted)
+                {
+                    await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, true);
+                }
+                else
+                {
+                    var game = await _context.Game.FindAsync(room.GameId);
+                    await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, false, room, game);
+                }
             }
 
             return RedirectToAction("RoomManager");
         }
-
-
     }
 }
