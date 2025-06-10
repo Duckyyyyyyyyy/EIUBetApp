@@ -314,6 +314,27 @@ namespace EIUBetApp.Data
         //    // Notify all clients about this status change
         //    await Clients.All.SendAsync("PlayerOnlineStatusChanged", playerId, isOnline);
         //}
+        public async Task ResetAllPlayersReadyStatus(string roomId)
+        {
+            var parsedRoomId = Guid.Parse(roomId);
+
+            // Get all players in the room and reset their ready status
+            var playersInRoom = await _context.ManageRoom
+                .Where(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null)
+                .Include(mr => mr.Player)
+                .Select(mr => mr.Player)
+                .ToListAsync();
+
+            foreach (var player in playersInRoom)
+            {
+                player.ReadyStatus = false;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Notify all clients in the room about the updated player list
+            await SendPlayerListUpdate(parsedRoomId, roomId);
+        }
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();

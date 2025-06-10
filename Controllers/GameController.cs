@@ -2,6 +2,7 @@
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Data;
 using System.Security.Claims;
 
@@ -11,13 +12,13 @@ namespace EIUBetApp.Controllers
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
+        private readonly IHubContext<EIUBetAppHub> _hubContext;
         private static readonly Random rand = new();
-        private static int winCount = 0;
-        private static int lossCount = 0;
 
-        public GameController(EIUBetAppContext context)
+        public GameController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public IActionResult Index(Guid RoomId)
@@ -65,6 +66,90 @@ namespace EIUBetApp.Controllers
         }
 
         [HttpPost]
+        public async Task<JsonResult> BauCuaSpin(int prediction, int betAmount, Guid roomId)
+        {
+
+            if (prediction < 1 || prediction > 6)
+            {
+                return Json(new { error = "Invalid prediction. Must be between 1 and 6." });
+            }
+
+            if (betAmount <= 0)
+            {
+                return Json(new { error = "Bet amount must be greater than 0." });
+            }
+
+            var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.PlayerId == Guid.Parse(playerId));
+            if (player == null)
+                return Json(new { error = "Player not found." });
+
+            if (player.Balance < betAmount)
+            {
+                return Json(new { error = "Insufficient balance." });
+            }
+
+            // Generate dice results
+            int[] diceResults = new int[3];
+            for (int i = 0; i < 3; i++)
+            {
+                diceResults[i] = rand.Next(1, 7);
+            }
+
+            // Count matches
+            int matchCount = diceResults.Count(dice => dice == prediction);
+
+            // Calculate winnings based on traditional Bau Cua rules
+            int winnings = 0;
+            if (matchCount > 0)
+            {
+                // Player wins: gets back bet + (bet * match count)
+                winnings = betAmount + (betAmount * matchCount);
+                player.Balance = player.Balance - betAmount + winnings;
+            }
+            else
+            {
+                // Player loses the bet
+                player.Balance -= betAmount;
+            }
+
+            // Save changes to database
+            await _context.SaveChangesAsync();
+
+            // Notify all players in the room about balance update
+            await _hubContext.Clients.Group(roomId.ToString()).SendAsync("PlayerBalanceUpdated",
+                player.PlayerId, player.Balance);
+
+            // Map numbers to names for display
+            var nameMap = new Dictionary<int, string>
+            {
+                { 1, "Bầu" },
+                { 2, "Nai" },
+                { 3, "Cua" },
+                { 4, "Cá" },
+                { 5, "Tôm" },
+                { 6, "Gà" }
+            };
+
+            var resultNames = diceResults.Select(num => nameMap[num]).ToArray();
+            var predictionName = nameMap[prediction];
+
+            return Json(new
+            {
+                success = true,
+                diceResults = diceResults,
+                resultNames = resultNames,
+                prediction = prediction,
+                predictionName = predictionName,
+                matchCount = matchCount,
+                betAmount = betAmount,
+                winnings = winnings,
+                newBalance = player.Balance,
+                won = matchCount > 0
+            });
+        }
+
+        [HttpPost]
         public JsonResult Spin(string prediction, int betAmount)
         {
             if (prediction != "tai" && prediction != "xiu")
@@ -82,17 +167,12 @@ namespace EIUBetApp.Controllers
 
             string GetResult(int s) => s >= 11 && s <= 17 ? "tai" : (s >= 4 && s <= 10 ? "xiu" : "hoa");
 
-            do
-            {
-                dice = new[] { rand.Next(1, 7), rand.Next(1, 7), rand.Next(1, 7) };
-                sum = dice.Sum();
-                result = GetResult(sum);
-
-            } while (result == prediction && winCount >= lossCount && result != "hoa");
+            dice = new[] { rand.Next(1, 7), rand.Next(1, 7), rand.Next(1, 7) };
+            sum = dice.Sum();
+            result = GetResult(sum);
 
             if (result == prediction)
             {
-                winCount++;
                 player.Balance += betAmount;
             }
             else if (result == "hoa")
@@ -101,7 +181,6 @@ namespace EIUBetApp.Controllers
             }
             else
             {
-                lossCount++;
                 player.Balance -= betAmount;
             }
 
@@ -112,9 +191,7 @@ namespace EIUBetApp.Controllers
                 dice,
                 sum,
                 result,
-                balance = player.Balance,
-                winCount,
-                lossCount
+                balance = player.Balance
             });
         }
     }

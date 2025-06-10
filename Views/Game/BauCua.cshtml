@@ -111,6 +111,10 @@
                 <button class="predict-btn" data-value="5">Tôm</button>
                 <button class="predict-btn" data-value="6">gà</button>
             </div>
+            <div class="balance-section">
+                <p>Balance: $<span id="balanceDisplay">@ViewBag.Balance</span></p>
+                <input id="betAmountInput" type="number" placeholder="Enter Bet Amount" min="1" />
+            </div>
             <button class="btn" id="spinBtn">Spin</button>
             <p id="resultText"></p>
             <div class="bgeffect" id="bgeffect"></div>
@@ -146,127 +150,168 @@ color:black;
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
-                const btn = document.querySelector(".btn");
-                const efx = document.querySelector(".bgeffect");
-                const diceContainers = [
-                    document.querySelector("#dice1"),
-                    document.querySelector("#dice2"),
-                    document.querySelector("#dice3")
-                ];
-                const predictButtons = document.querySelectorAll(".predict-btn");
-                const resultDiv = document.getElementById("resultText");
+        const btn = document.querySelector(".btn");
+        const efx = document.querySelector(".bgeffect");
+        const diceContainers = [
+            document.querySelector("#dice1"),
+            document.querySelector("#dice2"),
+            document.querySelector("#dice3")
+        ];
+        const predictButtons = document.querySelectorAll(".predict-btn");
+        const resultDiv = document.getElementById("resultText");
 
-                let userPrediction = null;
+        let userPrediction = null;
 
-                // Rotation positions
-                const rotations = {
-                    4: [0, 0],
-                    3: [0, 180],
-                    2: [0, 90],
-                    1: [0, -90],
-                    5: [-90, 0],
-                    6: [90, 0]
-                };
+        // Rotation positions
+        const rotations = {
+            4: [0, 0],
+            3: [0, 180],
+            2: [0, 90],
+            1: [0, -90],
+            5: [-90, 0],
+            6: [90, 0]
+        };
 
-                // Choose prediction
-                predictButtons.forEach(btn => {
-                    btn.addEventListener("click", () => {
-                        userPrediction = parseInt(btn.dataset.value);
-                        predictButtons.forEach(b => b.style.backgroundColor = "");
-                        btn.style.backgroundColor = "#aaffaa"; // highlight selected
-                    });
+        // Choose prediction
+        predictButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                userPrediction = parseInt(btn.dataset.value);
+                predictButtons.forEach(b => b.style.backgroundColor = "");
+                btn.style.backgroundColor = "#aaffaa"; // highlight selected
+            });
+        });
+        const balanceDisplay = document.getElementById("balanceDisplay");
+        const betAmountInput = document.getElementById("betAmountInput");
+        // Spin dice and check result
+        // Spin dice and check result
+        btn.addEventListener("click", async () => {
+            if (!userPrediction) {
+                resultDiv.textContent = "Please choose a number to predict.";
+                return;
+            }
+
+            const betAmount = parseInt(betAmountInput.value);
+            if (isNaN(betAmount) || betAmount <= 0) {
+                resultDiv.textContent = "Please enter a valid bet amount.";
+                return;
+            }
+
+            const currentBalance = parseInt(balanceDisplay.textContent);
+            if (betAmount > currentBalance) {
+                resultDiv.textContent = "Insufficient balance for this bet.";
+                return;
+            }
+
+            // Disable spin button to prevent multiple clicks
+            btn.disabled = true;
+
+            // Add spinning animation to all dice
+            diceContainers.forEach(dice => {
+                dice.style.transition = "transform 2s ease-out";
+                dice.style.transform = `rotateX(${360 * 2}deg) rotateY(${360 * 2}deg)`; // Spin multiple times
+            });
+
+            try {
+                // Call the server to handle the spin
+                const response = await fetch(`@Url.Action("BauCuaSpin", "Game")?prediction=${userPrediction}&betAmount=${betAmount}&roomId=${roomId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                // Spin dice and check result
-                        btn.addEventListener("click", () => {
-                    if (!userPrediction) {
-                        resultDiv.textContent = "Please choose a number to predict.";
-                        return;
+                const result = await response.json();
+
+                if (result.success) {
+                    // Wait a bit for the spinning effect, then show results
+                    setTimeout(() => {
+                        // Apply final rotations based on dice results
+                        result.diceResults.forEach((diceValue, index) => {
+                            const rotation = rotations[diceValue];
+                            if (rotation && diceContainers[index]) {
+                                diceContainers[index].style.transform =
+                                    `rotateX(${rotation[0]}deg) rotateY(${rotation[1]}deg)`;
+                            }
+                        });
+                    }, 1500); // Wait 1.5 seconds before showing final position
+
+                    balanceDisplay.textContent = result.newBalance;
+
+                    const nameMap = {
+                        1: "Bầu",
+                        2: "Nai",
+                        3: "Cua",
+                        4: "Cá",
+                        5: "Tôm",
+                        6: "Gà"
+                    };
+
+                    const resultNames = result.diceResults.map(num => nameMap[num]);
+                    let message = `Ra: ${resultNames.join(", ")} — `;
+                    if (result.matchCount === 0) {
+                        message += "❌ Không trúng.";
+                    } else {
+                        message += `✅ Trúng ${result.matchCount} lần! Thắng: $${result.winnings}`;
                     }
 
-                    // Disable spin button to prevent multiple clicks
-                    btn.disabled = true;
-
-                    let results = [];
-
-                    diceContainers.forEach((dice, index) => {
-                        const rolled = Math.floor(Math.random() * 6) + 1;
-                        const extraX = (3 + Math.floor(Math.random() * 3)) * 720;
-                        const extraY = (3 + Math.floor(Math.random() * 3)) * 720;
-                        const [rx, ry] = rotations[rolled];
-
-                        dice.style.transform = `rotateX(${rx + extraX}deg) rotateY(${ry + extraY}deg)`;
-                        results.push(rolled);
-                    });
-
-                    const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
-                    efx.style.backgroundColor = randomColor;
-                    btn.style.backgroundColor = randomColor;
-                    btn.textContent = "Rolling...";
-
+                    // Show result after dice stop spinning
                     setTimeout(() => {
-                        btn.textContent = "Spin";
-                        btn.disabled = false; // Enable button again
-
-                        const correctCount = results.filter(num => num === userPrediction).length;
-
-                        const nameMap = {
-                            1: "Bầu",
-                            2: "Nai",
-                            3: "Cua",
-                            4: "Cá",
-                            5: "Tôm",
-                            6: "Gà"
-                        };
-
-                        const resultNames = results.map(num => nameMap[num]);
-
-                        let message = `Ra: ${resultNames.join(", ")} — `;
-                        if (correctCount === 0) {
-                            message += "❌ Không trúng.";
-                        } else {
-                            message += `✅ Trúng ${correctCount} lần!`;
-                        }
-
                         resultDiv.textContent = message;
-                    }, 1000);
-                });
-
-
-                // Toast display helper
-                function showToast(message) {
-                    const toast = document.getElementById("toast");
-                    toast.textContent = message;
-                    toast.classList.add("show");
-                    setTimeout(() => {
-                        toast.classList.remove("show");
-                    }, 3500);
+                    }, 2000);
+                } else {
+                    resultDiv.textContent = result.error;
                 }
+            } catch (error) {
+                console.error('Error during spin:', error);
+                resultDiv.textContent = "There was an error processing your bet.";
+            } finally {
+                // Re-enable button after animation completes
+                setTimeout(() => {
+                    connection.invoke("ResetAllPlayersReadyStatus", roomId)
+                        .catch(err => {
+                            console.error("Error resetting ready status:", err);
+                        });
+                    btn.disabled = false;
+                    btn.textContent = "Spin";
+                }, 2000);
+            }
+        });
 
-                        document.addEventListener("click", function (event) {
-                    if (event.target.classList.contains("readyBtn")) {
-                        connection.invoke("SetReadyStatus", roomId, playerId, true)
-                            .then(() => {
-                                event.target.disabled = true;
-                                event.target.textContent = "Ready ✔";
-                            })
-                            .catch(err => {
-                                console.error("Error setting ready status:", err);
-                                showToast("Could not set ready status.");
-                            });
-                    }
-                });
 
-                // Grab roomId and playerId from server ViewBag
-                const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
-                const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
+        // Toast display helper
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("readyBtn")) {
+                connection.invoke("SetReadyStatus", roomId, playerId, true)
+                    .then(() => {
+                        event.target.disabled = true;
+                        event.target.textContent = "Ready ✔";
+                    })
+                    .catch(err => {
+                        console.error("Error setting ready status:", err);
+                        showToast("Could not set ready status.");
+                    });
+            }
+        });
+
+        // Grab roomId and playerId from server ViewBag
+        const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
+        const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
 
         const connection = new signalR.HubConnectionBuilder()
-                    .withUrl("/betHub?playerId=" + playerId)
+            .withUrl("/betHub?playerId=" + playerId)
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-                    connection.onreconnected(() => {
+        connection.onreconnected(() => {
             console.log("Reconnected to SignalR hub");
             connection.invoke("UpdateOnlineStatus", playerId, true);
         });
@@ -284,12 +329,12 @@ color:black;
         } else {
             console.error("Missing roomId or playerId");
         }
-                connection.on("ReceiveMessage", function (username, message, time) {
+        connection.on("ReceiveMessage", function (username, message, time) {
             const msgDiv = document.createElement("div");
             msgDiv.innerHTML = `<strong>${username}</strong> <small>${time}</small><br>${message}`;
             msgDiv.style.marginBottom = "10px";
 
-                    const chatMessages = document.getElementById("chatMessages");
+            const chatMessages = document.getElementById("chatMessages");
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
@@ -309,41 +354,47 @@ color:black;
                 document.getElementById("sendChatBtn").click();
             }
         });
-            // Show toast only if server calls ShowToast
-        connection.on("ShowToast", function(message) {
+        // Show toast only if server calls ShowToast
+        connection.on("ShowToast", function (message) {
             showToast(message);
         });
 
-                connection.on("UpdatePlayerList", function(players) {
-                    const container = document.getElementById("playerContainer");
-                    container.innerHTML = "";
+        connection.on("UpdatePlayerList", function (players) {
+            const container = document.getElementById("playerContainer");
+            container.innerHTML = "";
 
-                    const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
+            const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
 
-                    console.log(players);
-                    players.forEach(player => {
-                        const playerIdLower = (player.playerId || "").trim().toLowerCase();
+            console.log(players);
+            players.forEach(player => {
+                const playerIdLower = (player.playerId || "").trim().toLowerCase();
 
-                        const div = document.createElement("div");
-                        div.className = "user-card";
+                const div = document.createElement("div");
+                div.className = "user-card";
 
-                        div.innerHTML = `
+                // Check if this is the current player and their ready status
+                const isCurrentPlayer = playerIdLower === currentPlayerIdLower;
+                const isReady = player.readyStatus === "Ready" || player.readyStatus === true;
+
+                div.innerHTML = `
                             <h4>${player.username || "Unknown User"}</h4>
                             <p>Balance: ${player.balance}</p>
-                            <p class="status">${player.readyStatus}</p>
-                            ${playerIdLower === currentPlayerIdLower ? `
-                                <button class="readyBtn">Ready</button><br />
-                                <a  class="btn btn-outline-danger" href="/Home/Index">Quit</a>
+                            <p class="status">${isReady ? "Ready" : "Not Ready"}</p>
+                            ${isCurrentPlayer ? `
+                                <button class="readyBtn" ${isReady ? 'disabled' : ''}>
+                                    ${isReady ? 'Ready ✔' : 'Ready'}
+                                </button><br />
+                                <a class="btn btn-outline-danger" href="/Home/Index">Quit</a>
                             ` : ""}
                         `;
 
-                        container.appendChild(div);
-                    });
-                });
+                container.appendChild(div);
+            });
+        });
 
 
         // });
-                // Your dice game JS code goes here (omitted for brevity)
+        // Your dice game JS code goes here (omitted for brevity)
     </script>
 </body>
 </html>
