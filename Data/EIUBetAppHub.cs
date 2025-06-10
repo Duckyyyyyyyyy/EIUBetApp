@@ -339,25 +339,9 @@ namespace EIUBetApp.Data
             //{
             //    await hubContext.Clients.All.SendAsync("RoomDeleted", roomId);
             //}
-
-            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted, Room? room = null, Game? game = null)
+            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted)
             {
-                if (isDeleted)
-                {
-                    // Chỉ cần gửi ID để ẩn phòng
-                    await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, true);
-                }
-                else
-                {
-                    // Gửi lại đầy đủ dữ liệu để hiện phòng lại
-                    await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, false, new
-                    {
-                        roomId = room?.RoomId,
-                        roomName = room?.RoomName,
-                        capacity = room?.Capacity,
-                        gameName = game?.Name ?? "Unknown"
-                    });
-                }
+                await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, isDeleted);
             }
 
         }

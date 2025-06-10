@@ -1,53 +1,43 @@
-﻿@* @model List<EIUBetApp.Models.Player> *@
+﻿@model List<EIUBetApp.Models.Player>
 
-@* @{ *@
-@*     ViewData["Title"] = "Player Manager"; *@
-@* } *@
+@{
+    ViewData["Title"] = "Player Manager";
+}
 
-@* <div class="container mt-4"> *@
-@*     <h3>👤 Player Management</h3> *@
+<div class="container mt-4">
+    <h3>👤 Player Management</h3>
 
-@*     <table class="table table-hover table-bordered mt-3"> *@
-@*         <thead class="table-light"> *@
-@*             <tr class="text-center"> *@
-@*                 <th>Username</th> *@
-@*                 <th>Email</th> *@
-@*                 <th>Balance</th> *@
-@*                 <th>Online</th> *@
-@*                 <th>Available</th> *@
-@*                 <th>Actions</th> *@
-@*             </tr> *@
-@*         </thead> *@
-@*         <tbody> *@
-@*             @foreach (var player in Model) *@
-@*             { *@
-@*                 <tr class="text-center align-middle"> *@
-@*                     <td>@player.User?.Username</td> *@
-@*                     <td>@player.User?.Email</td> *@
-@*                     <td>$@player.Balance</td> *@
-@*                     <td> *@
-@*                         @(player.OnlineStatus == true *@
-@*                             ? "<span class='text-success'>🟢 Online</span>" *@
-@*                             : "<span class='text-secondary'>🔴 Offline</span>") *@
-@*                         @Html.Raw("") *@
-@*                     </td> *@
-@*                     <td> *@
-@*                         @(player.IsAvailable == true *@
-@*                             ? "<span class='badge bg-success'>Yes</span>" *@
-@*                             : "<span class='badge bg-danger'>No</span>") *@
-@*                         @Html.Raw("") *@
-@*                     </td> *@
-@*                     <td> *@
-@*                         <form asp-action="TogglePlayerAvailability" asp-controller="Admin" method="post" style="display:inline-block"> *@
-@*                             <input type="hidden" name="playerId" value="@player.PlayerId" /> *@
-@*                             <input type="hidden" name="status" value="@(player.IsAvailable ? "false" : "true")" /> *@
-@*                             <button type="submit" class="btn btn-sm @(player.IsAvailable ? "btn-danger" : "btn-success")"> *@
-@*                                 @(player.IsAvailable ? "Ban" : "Unban") *@
-@*                             </button> *@
-@*                         </form> *@
-@*                     </td> *@
-@*                 </tr> *@
-@*             } *@
-@*         </tbody> *@
-@*     </table> *@
-@* </div> *@
+    <table class="table table-hover table-bordered mt-3">
+        <thead class="table-light">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Balance</th>
+                <th>Online</th>
+                <th>Available</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var player in Model)
+            {
+                <tr>
+                    <td>@player.User?.Username</td>
+                    <td>@player.User?.Email</td>
+                    <td>$@player.Balance</td>
+                    <td>@(player.OnlineStatus == true ? "🟢" : "🔴")</td>
+                    <td>@(player.IsAvailable == true ? "Yes" : "No")</td>
+                    <td>
+                        <form asp-action="TogglePlayerAvailability" asp-controller="Admin" method="post" style="display:inline">
+                            <input type="hidden" name="playerId" value="@player.PlayerId" />
+                            <input type="hidden" name="status" value="@(player.IsAvailable == true ? "false" : "true")" />
+                            <button class="btn btn-sm @(player.IsAvailable == true ? "btn-danger" : "btn-success")">
+                                @(player.IsAvailable == true ? "Ban" : "Unban")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

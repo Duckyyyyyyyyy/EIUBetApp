@@ -88,7 +88,6 @@ namespace EIUBetApp.Controllers
         //}
 
         [HttpPost]
-        [HttpPost]
         public async Task<IActionResult> ToggleRoomStatus(Guid roomId, bool isDeleted)
         {
             var room = await _context.Room.FindAsync(roomId);
@@ -97,20 +96,12 @@ namespace EIUBetApp.Controllers
                 room.IsDeleted = isDeleted;
                 await _context.SaveChangesAsync();
 
-                if (isDeleted)
-                {
-                    await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, true);
-                }
-                else
-                {
-                    var game = await _context.Game.FindAsync(room.GameId);
-                    await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, false, room, game);
-                }
+                // Gửi realtime tới client để cập nhật UI
+                await HubExtensions.NotifyRoomVisibilityChanged(_hubContext, room.RoomId, isDeleted);
             }
 
             return RedirectToAction("RoomManager");
         }
-
 
 
         // ban may thk lol hack
