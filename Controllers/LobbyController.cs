@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles = "Player, Admin")]
+    [Authorize(Roles = "Player")]
     public class LobbyController : Controller
     {
         private readonly EIUBetAppContext _context;

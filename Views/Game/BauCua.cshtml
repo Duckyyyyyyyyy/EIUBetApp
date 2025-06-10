@@ -262,9 +262,16 @@ color:black;
                 const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
 
         const connection = new signalR.HubConnectionBuilder()
-                    .withUrl("/betHub?playerId=" + playerId)
-            .configureLogging(signalR.LogLevel.Information)
+            .withUrl("/betHub?playerId=" + playerId)
             .build();
+
+        window.addEventListener("beforeunload", () => {
+            connection.stop();
+        });
+
+        // connection.start().then(() => {
+        //     console.log("Connected to SignalR hub");
+        // }).catch(err => console.error('SignalR Connection Error:', err.toString()));
 
                     connection.onreconnected(() => {
             console.log("Reconnected to SignalR hub");
