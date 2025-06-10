@@ -1,143 +1,150 @@
 ﻿@model Tuple<IEnumerable<EIUBetApp.Models.Player>, IEnumerable<EIUBetApp.Models.Room>>
 @{
-	ViewData["Title"] = "Rooms Dashboard";
-	var currentPlayer = ViewBag.CurrentPlayer as EIUBetApp.Models.Player;
+    ViewData["Title"] = "Rooms Dashboard";
+    var currentPlayer = ViewBag.CurrentPlayer as EIUBetApp.Models.Player;
 }
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8" />
-	<title>@ViewData["Title"]</title>
-	<link rel="stylesheet" href="~/css/Lobby.css" asp-append-version="true" />
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/Lobby.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 </head>
 <body>
-	<div class="container-fluid vh-100">
-		<div class="row h-100">
-			<!-- Sidebar -->
-			<aside class="col-md-3 sidebar d-flex flex-column">
-				@if (currentPlayer != null)
-				{
-					<div class="user-info">
-						<h4 id="username">@currentPlayer.User.Username</h4>
-						<p>Balance: <strong id="balance">$@currentPlayer.Balance.ToString("F2")</strong></p>
-						<input type="hidden" id="playerId" value="@currentPlayer.PlayerId" />
-					</div>
-				}
-				else
-				{
-					<div class="user-info">
-						<h4 id="username">Guest</h4>
-						<p>Balance: <strong id="balance">$0.00</strong></p>
-					</div>
-				}
+    <div class="container-fluid vh-100">
+        <div class="row h-100">
+            <!-- Sidebar -->
+            <aside class="col-md-3 sidebar d-flex flex-column">
+                @if (currentPlayer != null)
+                {
+                    <div class="user-info">
+                        <h4 id="username">@currentPlayer.User.Username</h4>
+                        <p>Balance: <strong id="balance">$@currentPlayer.Balance.ToString("F2")</strong></p>
+                        <input type="hidden" id="playerId" value="@currentPlayer.PlayerId" />
+                    </div>
+                }
+                else
+                {
+                    <div class="user-info">
+                        <h4 id="username">Guest</h4>
+                        <p>Balance: <strong id="balance">$0.00</strong></p>
+                    </div>
+                }
 
-				<h5 class="text-white mb-2">Online Users</h5>
-				<div class="friends" id="friendsList">
-					@foreach (var player in Model.Item1)
-					{
-						if (player.PlayerId != currentPlayer.PlayerId)
-						{
-							<div class="friend">
-								<div class="friend-name">
-									@Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
-									@player.User.Username
-								</div>
-								<span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
-								@Html.Raw(player.OnlineStatus == true ? "<button class='btn btn-sm btn-outline-light' onclick=\"invite('" + player.User.Username + "')\">Invite</button>" : "")
-							</div>
-						}
-					}
-				</div>
-				<a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
-			</aside>
+                <h5 class="text-white mb-2">Online Users</h5>
+                <div class="friends" id="friendsList">
+                    @foreach (var player in Model.Item1)
+                    {
+                        if (player.PlayerId != currentPlayer.PlayerId)
+                        {
+                            <div class="friend">
+                                <div class="friend-name">
+                                    @Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
+                                    @player.User.Username
+                                </div>
+                                <span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
+                        @Html.Raw(player.OnlineStatus == true ? "<button class='btn btn-sm btn-outline-light' onclick=\"invite('" + player.User.Username + "')\">Invite</button>": "")
+                            </div>
+                        }
+                    }
+                </div>
+                <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
+            </aside>
 
-			<!-- Main Content -->
-			<main class="col-md-9 p-4 bg-light">
-				<h3>Available Rooms</h3>
-				<div id="roomList">
-					@foreach (var room in Model.Item2)
-					{
-						<div class="room-card d-flex justify-content-between align-items-center mb-2">
-							<div>
-								<h5>@room.RoomName</h5>
-								<p class="mb-0">Room ID: @room.RoomId</p>
-							</div>
-							<button type="button" class="btn btn-sm btn-primary"
-									onclick="joinRoom('@room.RoomId')"
-									aria-label="Join room @room.RoomName">
-								Join
-							</button>
-						</div>
-					}
-				</div>
-			</main>
-		</div>
-	</div>
+            <!-- Main Content -->
+            <main class="col-md-9 p-4 bg-light">
+                <h3>Available Rooms</h3>
+                <div id="roomList">
+                    @foreach (var room in Model.Item2)
+                    {
+                        <div class="room-card d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h5>@room.RoomName</h5>
+                                <p class="mb-0">Room ID: @room.RoomId</p>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    onclick="joinRoom('@room.RoomId')"
+                                    aria-label="Join room @room.RoomName">
+                                Join
+                            </button>
+                        </div>
+                    }
+                </div>
+            </main>
+        </div>
+    </div>
 
-	<script>
-		const playerId = document.getElementById("playerId")?.value;
-				const connection = new signalR.HubConnectionBuilder()
-			.withUrl("/betHub?playerId=" + playerId)
-			.build();
+    <script>
+        const playerId = document.getElementById("playerId")?.value;
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/betHub?playerId=" + playerId)
+            .build();
 
-		window.addEventListener("beforeunload", () => {
-			connection.stop();
-		});
+        connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
 
-		connection.start().then(() => {
-			console.log("Connected to SignalR hub");
-		}).catch(err => console.error('SignalR Connection Error:', err.toString()));
+        connection.onreconnected(() => {
+            console.log("Reconnected to SignalR hub");
+            connection.invoke("UpdateOnlineStatus", playerId, true);
+        });
 
-		connection.onreconnected(() => {
-			console.log("Reconnected to SignalR hub");
-			connection.invoke("UpdateOnlineStatus", playerId, true);
-		});
+        connection.on("UserJoined", function (username) {
+            alert(`${username} has joined the room!`);
+        });
 
-		connection.on("UserJoined", function (username) {
-			alert(`${username} has joined the room!`);
-		});
+        connection.on("UpdatePlayerList", function (players) {
+            console.log("Players currently in the room:", players);
+            // You could update the UI here dynamically if desired
+        });
 
-		connection.on("UpdatePlayerList", function (players) {
-			console.log("Players currently in the room:", players);
-			// You could update the UI here dynamically if desired
-		});
+        function joinRoom(roomId) {
+            // const playerId = document.getElementById("playerId")?.value;
 
-		function joinRoom(roomId) {
-			// const playerId = document.getElementById("playerId")?.value;
+            if (!playerId) {
+                alert("You must be logged in to join a room.");
+                return;
+            }
 
-			if (!playerId) {
-				alert("You must be logged in to join a room.");
-				return;
-			}
+            connection.invoke("JoinRoom", roomId, playerId)
+                .then(() => {
+                    console.log("Successfully joined room:", roomId);
+                    // Optionally redirect to a room page:
+                     window.location.href = `/Game/BauCua?roomId=${roomId}`;
+                })
+                .catch(err => {
+                    console.error("Error joining room:", err.toString());
+                    
+                });
+        }
 
-			connection.invoke("JoinRoom", roomId, playerId)
-				.then(() => {
-					console.log("Successfully joined room:", roomId);                                    })
-				.catch(err => {
-					 alert(err.message || "Failed to join the room.");
-				});
-		}
+        // Optional invite function stub if you want
+                function invite(username) {
+            const playerId = document.getElementById("playerId")?.value;
 
-				connection.on("ReceiveRoomInfo", function(room) {
-					console.log(room);
-					if(room.gameName == "Bau Cua"){
-					  window.location.href = `/Game/BauCua?roomId=${room.roomId}`;
-					}else if(room.gameName =="Tai Xiu"){
-						window.location.href = `/Game/Index?roomId=${room.roomId}`;
+            if (!playerId) {
+                alert("You must be logged in to send an invite.");
+                return;
+            }
 
-					}
+            connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
+                .then(() => {
+                    console.log("Invite sent to", username);
+                })
+                .catch(err => {
+                    alert("Failed to send invite: " + err.toString());
+                });
+        }
+                // Assuming 'connection' is your SignalR connection instance
 
-		});
+        connection.on("ReceiveInvite", function(fromUsername, roomId) {
+            // Show an invite message to the user
+            alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
 
-		// Optional invite function stub if you want
-				function invite(username) {
-			// const playerId = document.getElementById("playerId")?.value;
-			if (!playerId) {
-				alert("You must be logged in to send an invite.");
-				return;
-			}
+            // Optionally, ask the user if they want to join the room
+            if (confirm(`Do you want to join room ${roomId}?`)) {
+                const playerId = document.getElementById("playerId")?.value;  // or get it from wherever you store it
 
+<<<<<<< HEAD
 			connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
 				.then(() => {
 					console.log("Invite sent to", username);
@@ -266,5 +273,18 @@
 =======
 	</script>
 >>>>>>> f1bbc8f893754a89de8f6df6cf326f7404928261
+=======
+                if (playerId) {
+                    connection.invoke("JoinRoom", roomId, playerId)
+                        .catch(err => console.error(err.toString()));
+                } else {
+                    alert("Player ID not found. Cannot join the room.");
+                }
+            }
+        });
+
+
+    </script>
+>>>>>>> parent of f1bbc8f (done invite)
 </body>
 </html>

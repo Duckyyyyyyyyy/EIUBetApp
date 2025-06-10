@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles = "Player")]
+    [Authorize(Roles = "Player,Admin")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -20,11 +20,8 @@ namespace EIUBetApp.Controllers
             _context = context;
         }
 
-        public IActionResult Index(Guid RoomId)
+        public IActionResult Index()
         {
-            var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
-            if (room == null) return NotFound();
-
             var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");

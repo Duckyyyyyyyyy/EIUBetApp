@@ -28,13 +28,13 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        @* <li class="nav-item"> *@
-                        @*     <a class="nav-link text-dark" asp-area="" asp-controller="Game" asp-action="Index">Tài Xỉu</a> *@
-                        @* </li> *@
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Game" asp-action="Index">Tài Xỉu</a>
+                        </li>
 
-                        @* <li class="nav-item"> *@
-                        @*     <a class="nav-link text-dark" asp-area="" asp-controller="Lobby" asp-action="Index">Lobby</a> *@
-                        @* </li> *@
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Lobby" asp-action="Index">Lobby</a>
+                        </li>
 
                         @* Show Admin link only if user is in Admin role *@
                         @if (User.IsInRole("Admin"))
