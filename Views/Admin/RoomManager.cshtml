@@ -1,0 +1,56 @@
+﻿@model List<EIUBetApp.Models.Room>
+@{
+    ViewData["Title"] = "Room Manager";
+    var games = ViewBag.Games as List<EIUBetApp.Models.Game>;
+}
+
+<div class="container mt-4">
+    <h3>🏠 Room Manager</h3>
+
+    <!-- Create Room Form -->
+    <form asp-action="CreateRoom" asp-controller="Admin" method="post" class="row g-3 border p-3 rounded shadow-sm mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Room Name</label>
+            <input type="text" name="RoomName" class="form-control" required />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Capacity</label>
+            <input type="number" name="Capacity" class="form-control" value="4" min="2" max="10" required />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Select Game</label>
+            <select name="GameId" class="form-select" required>
+                @foreach (var game in games)
+                {
+                    <option value="@game.GameId">@game.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-success w-100">Create Room</button>
+        </div>
+    </form>
+
+    <!-- Existing Rooms Table -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Room Name</th>
+                <th>Game</th>
+                <th>Capacity</th>
+                <th>Available?</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var room in Model)
+            {
+                <tr>
+                    <td>@room.RoomName</td>
+                    <td>@room.Game?.Name</td>
+                    <td>@room.Capacity</td>
+                    <td>@(room.IsAvailable ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
