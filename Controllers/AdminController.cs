@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using static EIUBetApp.Data.EIUBetAppHub;
 
 namespace EIUBetApp.Controllers
 {
@@ -11,6 +12,7 @@ namespace EIUBetApp.Controllers
     public class AdminController : Controller
     {
         private readonly EIUBetAppContext _context;
+        private readonly IHubContext<EIUBetAppHub> _hubContext;
         public AdminController(EIUBetAppContext context)
         {
             _context = context;
@@ -63,24 +65,7 @@ namespace EIUBetApp.Controllers
 
             return RedirectToAction("RoomManager");
         }
-<<<<<<< HEAD
-        //[HttpPost]
-        //public async Task<IActionResult> DeleteRoom(Guid roomId)
-        //{
-        //    var room = await _context.Room.FindAsync(roomId);
-        //    if (room != null)
-        //    {
-        //        _context.Room.Remove(room);
-        //        await _context.SaveChangesAsync();
-
-        //        // Gửi signalR thông báo xóa phòng
-        //        await HubExtensions.NotifyRoomDeleted(_hubContext, roomId);
-        //    }
-
-        //    return RedirectToAction("RoomManager");
-        //}
-
-        [HttpPost]
+       
         [HttpPost]
         public async Task<IActionResult> ToggleRoomStatus(Guid roomId, bool isDeleted)
         {
@@ -103,27 +88,6 @@ namespace EIUBetApp.Controllers
 
             return RedirectToAction("RoomManager");
         }
-
-=======
->>>>>>> parent of f1bbc8f (done invite)
-
-
-        // ban may thk lol hack
-        //[HttpPost]
-        //public async Task<IActionResult> TogglePlayerAvailability(Guid playerId, bool status)
-        //{
-        //    var player = await _context.Player.FindAsync(playerId);
-        //    if (player != null)
-        //    {
-        //        player.IsAvailable = status;
-        //        await _context.SaveChangesAsync();
-
-        //        // Gửi signalR nếu muốn thông báo realtime
-        //        await _context.Clients.All.SendAsync("PlayerBanned", playerId, !status); // true = bị cấm
-        //    }
-
-        //    return RedirectToAction("PlayerManager");
-        //}
 
     }
 }
