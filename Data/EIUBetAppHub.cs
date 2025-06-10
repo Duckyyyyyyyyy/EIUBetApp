@@ -145,7 +145,7 @@ namespace EIUBetApp.Data
             var currentCount = await _context.ManageRoom
                 .CountAsync(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null);
 
-            if (currentCount >= maxCapacity)
+            if (currentCount >= (maxCapacity -1))
                 throw new HubException("Room is full. Please try another room.");
 
             _connections[connectionId] = (parsedRoomId, parsedPlayerId);
@@ -320,5 +320,32 @@ namespace EIUBetApp.Data
             // gui tin nhan den mn trong room
             await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
         }
+
+        // tao phong moi
+        public static class HubExtensions
+        {
+            public static async Task NotifyNewRoomCreated(IHubContext<EIUBetAppHub> hubContext, Room room, Game game)
+            {
+                await hubContext.Clients.All.SendAsync("NewRoomAdded", new
+                {
+                    roomId = room.RoomId,
+                    roomName = room.RoomName,
+                    capacity = room.Capacity,
+                    gameName = game?.Name ?? "Unknown"
+                });
+            }
+
+            //public static async Task NotifyRoomDeleted(IHubContext<EIUBetAppHub> hubContext, Guid roomId)
+            //{
+            //    await hubContext.Clients.All.SendAsync("RoomDeleted", roomId);
+            //}
+            public static async Task NotifyRoomVisibilityChanged(IHubContext<EIUBetAppHub> hubContext, Guid roomId, bool isDeleted)
+            {
+                await hubContext.Clients.All.SendAsync("RoomVisibilityChanged", roomId, isDeleted);
+            }
+
+        }
+
+
     }
 }

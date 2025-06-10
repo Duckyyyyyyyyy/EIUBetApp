@@ -113,6 +113,7 @@
                 })
                 .catch(err => {
                     console.error("Error joining room:", err.toString());
+                     window.location.href = '/Home/Index';
                 });
         }
 
@@ -151,6 +152,49 @@
                 }
             }
         });
+                connection.on("NewRoomAdded", function(room) {
+            const container = document.getElementById("roomList");
+            const div = document.createElement("div");
+            div.className = "room-card d-flex justify-content-between align-items-center mb-2";
+
+            div.innerHTML = `
+                <div>
+                    <h5>${room.roomName}</h5>
+                    <p class="mb-0">Room ID: ${room.roomId}</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary"
+                        onclick="joinRoom('${room.roomId}')">
+                    Join
+                </button>
+            `;
+
+            container.appendChild(div);
+        });
+        //         connection.on("RoomDeleted", function(roomId) {
+        //     const roomElements = document.querySelectorAll("#roomList .room-card");
+        //     roomElements.forEach(el => {
+        //         const idText = el.querySelector("p.mb-0")?.innerText || "";
+        //         if (idText.includes(roomId)) {
+        //             el.remove();
+        //         }
+        //     });
+        // });
+                connection.on("RoomVisibilityChanged", function(roomId, isDeleted) {
+            const roomElements = document.querySelectorAll("#roomList .room-card");
+            roomElements.forEach(el => {
+                const idText = el.querySelector("p.mb-0")?.innerText || "";
+                if (idText.includes(roomId)) {
+                    if (isDeleted) {
+                        el.remove(); // Ẩn khỏi giao diện
+                    } else {
+                        // Optional: reload phòng mới hoạt động lại (tùy chọn)
+                        el.reload(); // đơn giản
+                    }
+                }
+            });
+        });
+
+
 
 
     </script>
