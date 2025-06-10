@@ -26,10 +26,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+
+    // Set cookie expiration time
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Valid for 60 minutes
+
+    // Optional: Reset expiration time on each request
+    options.SlidingExpiration = true;
 });
 
 // SignalR support
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(15); // default: 30s
+    options.KeepAliveInterval = TimeSpan.FromSeconds(5);      // default: 15s
+});
 
 var app = builder.Build();
 

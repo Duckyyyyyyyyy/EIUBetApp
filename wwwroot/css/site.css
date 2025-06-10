@@ -1,9 +1,279 @@
-html {
-  font-size: 14px;
+﻿
+/* Casino Theme - site.css */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+    --retro-red: #d2001f;
+    --retro-dark-red: #8b0000;
+    --retro-orange: #ff6b35;
+    --retro-yellow: #f7931e;
+    --retro-brown: #8b4513;
+    --retro-tan: #d2b48c;
+    --retro-cream: #f5f5dc;
+    --retro-dark-brown: #3e2723;
+    --retro-wood: #5d4037;
+    --retro-gold: #b8860b;
+    --retro-green: #228b22;
+    --casino-neon: #ff1744;
+    --retro-shadow: rgba(139, 0, 0, 0.3);
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    background: linear-gradient(135deg, var(--retro-dark-brown) 0%, var(--retro-wood) 100%);
+    color: var(--retro-cream);
+    min-height: 100vh;
+    position: relative;
+}
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient( 45deg, transparent, transparent 15px, rgba(184, 134, 11, 0.05) 15px, rgba(184, 134, 11, 0.05) 30px );
+        pointer-events: none;
+        z-index: -1;
+    }
+
+/* Casino Navbar Styling */
+.navbar {
+    background: linear-gradient(135deg, var(--retro-wood) 0%, var(--retro-brown) 100%) !important;
+    border-bottom: 4px solid var(--retro-gold) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    padding: 1rem 0;
+    position: relative;
+}
+
+.navbar-brand {
+    font-family: 'Bebas Neue', cursive !important;
+    color: var(--retro-yellow) !important;
+    font-size: 2rem !important;
+    font-weight: normal !important;
+    text-shadow: 2px 2px 0px var(--retro-dark-brown), 0 0 10px rgba(247, 147, 30, 0.5) !important;
+    letter-spacing: 2px;
+    margin-left: 80px;
+    transition: all 0.3s ease;
+}
+
+    .navbar-brand:hover {
+        color: var(--retro-gold) !important;
+        text-shadow: 2px 2px 0px var(--retro-dark-brown), 0 0 20px rgba(184, 134, 11, 0.8) !important;
+    }
+
+.navbar-nav .nav-link {
+    color: var(--retro-cream) !important;
+    font-weight: 500 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.8rem 1.2rem !important;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    position: relative;
+    margin: 0 2px;
+}
+
+    .navbar-nav .nav-link::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: var(--retro-gold);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .navbar-nav .nav-link:hover {
+        color: var(--retro-yellow) !important;
+        background: rgba(184, 134, 11, 0.1);
+        transform: translateY(-2px);
+    }
+
+        .navbar-nav .nav-link:hover::before {
+            width: 80%;
+        }
+
+    .navbar-nav .nav-link.active {
+        color: var(--retro-gold) !important;
+        background: rgba(184, 134, 11, 0.2);
+    }
+
+.navbar-text {
+    color: var(--retro-yellow) !important;
+    font-weight: 600 !important;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.1rem !important;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0px var(--retro-dark-brown);
+}
+
+/* Button Styling */
+.btn-outline-primary {
+    border: 2px solid var(--retro-yellow) !important;
+    color: var(--retro-yellow) !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.6rem 1.5rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+}
+
+    .btn-outline-primary:hover {
+        background: var(--retro-yellow) !important;
+        color: var(--retro-dark-brown) !important;
+        border-color: var(--retro-yellow) !important;
+        box-shadow: 0 4px 15px rgba(247, 147, 30, 0.4);
+        transform: translateY(-2px);
+    }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--retro-red) 0%, var(--casino-neon) 100%) !important;
+    border: 2px solid var(--retro-dark-red) !important;
+    color: var(--retro-cream) !important;
+    font-family: 'Bebas Neue', cursive;
+    font-weight: normal !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.8rem 2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 0px var(--retro-dark-red), 0 0 15px rgba(255, 23, 68, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--casino-neon) 0%, var(--retro-red) 100%) !important;
+        border-color: var(--retro-dark-red) !important;
+        color: var(--retro-cream) !important;
+        transform: translateY(1px);
+        box-shadow: 0 2px 0px var(--retro-dark-red), 0 0 25px rgba(255, 23, 68, 0.5);
+    }
+
+
+
+.alert-success {
+    background: rgba(34, 139, 34, 0.1) !important;
+    border-color: var(--retro-green) !important;
+    color: var(--retro-green) !important;
+}
+
+.alert-danger {
+    background: rgba(210, 0, 31, 0.1) !important;
+    border-color: var(--retro-red) !important;
+    color: var(--retro-red) !important;
+}
+
+.alert-warning {
+    background: rgba(247, 147, 30, 0.1) !important;
+    border-color: var(--retro-yellow) !important;
+    color: var(--retro-dark-brown) !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.5rem !important;
+        margin-left: 40px;
+    }
+
+    .navbar::before {
+        font-size: 1rem;
+        letter-spacing: 4px;
+        left: 10px;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.6rem 1rem !important;
+    }
+
+    main {
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    h3 {
+        font-size: 1.7rem;
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--retro-dark-brown);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--retro-wood);
+    border: 2px solid var(--retro-brown);
+    border-radius: 6px;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--retro-brown);
+    }
+
+/* Additional Casino Elements */
+.casino-glow {
+    text-shadow: 0 0 10px rgba(255, 23, 68, 0.5);
+}
+
+.casino-border {
+    border: 2px solid var(--retro-gold);
+    border-radius: 8px;
+    padding: 1rem;
+    background: rgba(184, 134, 11, 0.05);
+}
+
+/* Navbar Toggler Custom Styling */
+.navbar-toggler {
+    border: 2px solid var(--retro-gold) !important;
+    padding: 0.5rem;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28247, 147, 30, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(247, 147, 30, 0.25) !important;
 }

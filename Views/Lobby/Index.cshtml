@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 </head>
 <body>
-    <div class="container-fluid h-100">
+    <div class="container-fluid vh-100">
         <div class="row h-100">
             <!-- Sidebar -->
             <aside class="col-md-3 sidebar d-flex flex-column">
@@ -36,17 +36,20 @@
                 <div class="friends" id="friendsList">
                     @foreach (var player in Model.Item1)
                     {
-                        <div class="friend">
-                            <div class="friend-name">
-                                <span class="status-dot"></span>
-                                @player.User.Username
+                        if (player.PlayerId != currentPlayer.PlayerId)
+                        {
+                            <div class="friend">
+                                <div class="friend-name">
+                                    @Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
+                                    @player.User.Username
+                                </div>
+                                <span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
+                                @Html.Raw(player.OnlineStatus == true ? "<button class='btn btn-sm btn-outline-light' onclick=\"invite('" + player.User.Username + "')\">Invite</button>" : "")
                             </div>
-                            <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
-                        </div>
+                        }
                     }
                 </div>
-
-                <button class="btn btn-outline-light logout-btn" onclick="logout()">Logout</button>
+                <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
             </aside>
 
             <!-- Main Content -->
@@ -55,13 +58,20 @@
                 <div id="roomList">
                     @foreach (var room in Model.Item2)
                     {
-                        <div class="room-card d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>@room.RoomName</h5>
-                                <p class="mb-0">Room ID: @room.RoomId</p>
+                        if (!room.IsDeleted)
+                        {
+                            <div class="room-card d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h5>@room.RoomName</h5>
+                                    <p class="mb-0">Room ID: @room.RoomId</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary"
+                                        onclick="joinRoom('@room.RoomId')"
+                                        aria-label="Join room @room.RoomName">
+                                    Join
+                                </button>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="joinRoom('@room.RoomId')">Join</button>
-                        </div>
+                        }
                     }
                 </div>
             </main>
@@ -69,38 +79,201 @@
     </div>
 
     <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/betHub")
-            .build();
-
-        // Start SignalR connection
-        connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
-
-        // Join room by RoomId and PlayerId
-        async function joinRoom(roomId) {
             const playerId = document.getElementById("playerId")?.value;
-            if (!playerId) {
-                alert("You must be logged in to join a room.");
-                return;
+                    const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/betHub?playerId=" + playerId)
+                .build();
+
+            window.addEventListener("beforeunload", () => {
+                connection.stop();
+            });
+
+            connection.start().then(() => {
+                console.log("Connected to SignalR hub");
+            }).catch(err => console.error('SignalR Connection Error:', err.toString()));
+
+            connection.onreconnected(() => {
+                console.log("Reconnected to SignalR hub");
+                connection.invoke("UpdateOnlineStatus", playerId, true);
+            });
+
+            connection.on("UserJoined", function (username) {
+                alert(`${username} has joined the room!`);
+            });
+
+            connection.on("UpdatePlayerList", function (players) {
+                console.log("Players currently in the room:", players);
+                // You could update the UI here dynamically if desired
+            });
+
+            function joinRoom(roomId) {
+                // const playerId = document.getElementById("playerId")?.value;
+
+                if (!playerId) {
+                    alert("You must be logged in to join a room.");
+                    return;
+                }
+
+                connection.invoke("JoinRoom", roomId, playerId)
+                    .then(() => {
+                        console.log("Successfully joined room:", roomId);                                    })
+                    .catch(err => {
+                         alert(err.message || "Failed to join the room.");
+                    });
             }
 
-            try {
-                // Call the JoinRoom hub method with roomId and playerId
-                await connection.invoke("JoinRoom", roomId, playerId);
+                    connection.on("ReceiveRoomInfo", function(room) {
+                        console.log(room);
+                        if(room.gameName == "Bau Cua"){
+                          window.location.href = `/Game/BauCua?roomId=${room.roomId}`;
+                        }else if(room.gameName =="Tai Xiu"){
+                            window.location.href = `/Game/Index?roomId=${room.roomId}`;
 
-                // Redirect to the game room page
-                 window.location.href = `/Game/BauCua?roomId=${roomId}`;
-            } catch (err) {
-                console.error("Failed to join room:", err);
-                alert("Failed to join room. Please try again.");
+                        }
+
+            });
+
+            // Optional invite function stub if you want
+                    function invite(username) {
+                // const playerId = document.getElementById("playerId")?.value;
+                if (!playerId) {
+                    alert("You must be logged in to send an invite.");
+                    return;
+                }
+
+                connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
+                    .then(() => {
+                        console.log("Invite sent to", username);
+                    })
+                    .catch(err => {
+                        alert("Failed to send invite: " + err.toString());
+                    });
             }
-        }
+            //receive random room when invite, then go to that room to wait for other friend
+                        connection.on("InviteSentSuccess", function (toUsername, roomId) {
+                console.log("InviteSentSuccess received:", toUsername, roomId);
+                connection.invoke("JoinRoom", roomId, playerId)
+                            .catch(err => console.error(err.toString()));
+            });
 
-        // Example real-time notification when a user joins a room
-        connection.on("UserJoined", function (username) {
-            alert(`${username} has joined the room!`);
-            // Optionally update UI here with new user info
+            connection.on("ReceiveInvite", function(fromUsername, roomId) {
+                // Show an invite message to the user
+                alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
+
+                // Optionally, ask the user if they want to join the room
+                if (confirm(`Do you want to join room ${roomId}?`)) {
+                    const playerId = document.getElementById("playerId")?.value;  // or get it from wherever you store it
+
+                    if (playerId) {
+                        connection.invoke("JoinRoom", roomId, playerId)
+                            .catch(err => console.error(err.toString()));
+                    } else {
+        alert("Player ID not found. Cannot join the room.");
+                    }
+                }
+            });
+                    connection.on("NewRoomAdded", function(room) {
+                const container = document.getElementById("roomList");
+                const div = document.createElement("div");
+                div.className = "room-card d-flex justify-content-between align-items-center mb-2";
+
+                div.innerHTML = `
+                    <div>
+                        <h5>${room.roomName}</h5>
+                        <p class="mb-0">Room ID: ${room.roomId}</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary"
+                            onclick="joinRoom('${room.roomId}')">
+                        Join
+                    </button>
+                `;
+
+                container.appendChild(div);
+            });
+                    connection.on("RoomVisibilityChanged", function(roomId, isDeleted) {
+                const roomElements = document.querySelectorAll("#roomList .room-card");
+                roomElements.forEach(el => {
+                    const idText = el.querySelector("p.mb-0")?.innerText || "";
+                    if (idText.includes(roomId)) {
+                        if (isDeleted) {
+                            el.remove(); // Ẩn khỏi giao diện
+                        } else {
+                            // Optional: reload phòng mới hoạt động lại (tùy chọn)
+                            el.reload(); // đơn giản
+                        }
+                    }
+                });
+            });
+
+
+
+
+        //add rooom
+                        connection.on("RoomVisibilityChanged", function (roomId, isDeleted, roomData) {
+                const container = document.getElementById("roomList");
+                const roomElements = container.querySelectorAll(".room-card");
+
+                roomElements.forEach(el => {
+                    const idText = el.querySelector("p.mb-0")?.innerText || "";
+                    if (idText.includes(roomId)) {
+                        if (isDeleted) {
+                            el.remove();
+                        } else {
+                            return;
+                        }
+                    }
+                });
+
+                if (!isDeleted && roomData) {
+                    const div = document.createElement("div");
+                    div.className = "room-card d-flex justify-content-between align-items-center mb-2";
+
+                    div.innerHTML = `
+                        <div>
+                            <h5>${roomData.roomName}</h5>
+                            <p class="mb-0">Room ID: ${roomData.roomId}</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary"
+                                onclick="joinRoom('${roomData.roomId}')">
+                            Join
+                        </button>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+
+
+            //realtime online status
+                    connection.on("PlayerOnlineStatusChanged", function (playerId, isOnline) {
+            const friendElements = document.querySelectorAll("#friendsList .friend");
+
+            friendElements.forEach(friend => {
+                const idAttr = friend.querySelector("input[type='hidden']")?.value;
+                if (idAttr === playerId) {
+                    const statusDot = friend.querySelector(".status-dot, .status-dot2");
+                    const statusText = friend.querySelector("span:nth-of-type(2)");
+                    const inviteBtn = friend.querySelector("button");
+
+                    if (isOnline) {
+                        statusDot.className = "status-dot";
+                        statusText.innerHTML = "<span>Online</span>";
+                        if (!inviteBtn) {
+                            const username = friend.querySelector(".friend-name").textContent.trim();
+                            const btn = document.createElement("button");
+                            btn.className = "btn btn-sm btn-outline-light";
+                            btn.textContent = "Invite";
+                            btn.onclick = () => invite(username);
+                            friend.appendChild(btn);
+                        }
+                    } else {
+                        statusDot.className = "status-dot2";
+                        statusText.innerHTML = "<span>Offline</span>";
+                        if (inviteBtn) inviteBtn.remove();
+                    }
+                }
+            });
         });
     </script>
+
 </body>
 </html>

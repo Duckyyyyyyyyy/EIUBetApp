@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -12,10 +13,11 @@ namespace EIUBetApp.Controllers
     public class AccountController : Controller
     {
         private readonly EIUBetAppContext _context;
-
-        public AccountController(EIUBetAppContext context)
+        private readonly IHubContext<EIUBetAppHub> _hubContext;
+        public AccountController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public IActionResult Login() => View();
@@ -99,7 +101,7 @@ namespace EIUBetApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _context.User.Include(u=> u.Player).FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
@@ -119,7 +121,7 @@ namespace EIUBetApp.Controllers
             // Create claims
                     var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Player.PlayerId.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("Username", user.Username ?? "Unkown Player"),
              };
@@ -135,12 +137,21 @@ namespace EIUBetApp.Controllers
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-            
+            TempData["PlayerId"] = user.Player?.PlayerId.ToString();
             return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> Logout()
-        {
+        {// Get the player ID from claims
+            var playerId = User.FindFirst("PlayerId")?.Value;
+
+            if (!string.IsNullOrEmpty(playerId))
+            {
+                // Call the SignalR method to update status to offline
+                await _hubContext.Clients.All.SendAsync("UpdateOnlineStatus", playerId, false);
+            }
+
+            // Sign out
             await HttpContext.SignOutAsync();
 
             return RedirectToAction("Login", "Account");
@@ -150,8 +161,5 @@ namespace EIUBetApp.Controllers
         {
             return View();
         }
-
-       
-
     }
 }

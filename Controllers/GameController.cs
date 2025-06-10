@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles = "Player,Admin")]
+    [Authorize(Roles = "Player")]
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -20,15 +20,18 @@ namespace EIUBetApp.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(Guid RoomId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
+            if (room == null) return NotFound();
+
+            var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");
             var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-            var userGuid = Guid.Parse(userId);
-            var player = _context.Player.FirstOrDefault(p => p.UserId == userGuid);
+            var playerGuid = Guid.Parse(playerId);
+            var player = _context.Player.FirstOrDefault(p => p.PlayerId == playerGuid);
 
             ViewBag.Username = username;
             ViewBag.Email = email;
@@ -41,14 +44,14 @@ namespace EIUBetApp.Controllers
         public IActionResult BauCua(Guid RoomId)
         {
             var room = _context.Room.SingleOrDefault(r => r.RoomId == RoomId);
-            if (room == null) return NotFound();            
+            if (room == null) return NotFound();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var username = User.FindFirstValue("Username");
             var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-            
-            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+
+            var player = _context.Player.SingleOrDefault(p => p.PlayerId == Guid.Parse(playerId));
             if (player == null) return NotFound();
 
             ViewBag.RoomId = room.RoomId;
@@ -69,8 +72,8 @@ namespace EIUBetApp.Controllers
                 return Json(new { error = "Invalid prediction. Must be 'tai' or 'xiu'." });
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var player = _context.Player.SingleOrDefault(p => p.UserId == Guid.Parse(userId));
+            var playerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var player = _context.Player.SingleOrDefault(p => p.PlayerId == Guid.Parse(playerId));
             if (player == null) return Json(new { error = "Player not found." });
 
             int[] dice;

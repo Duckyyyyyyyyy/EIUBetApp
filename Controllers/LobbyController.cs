@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace EIUBetApp.Controllers
 {
-    [Authorize(Roles = "Player, Admin")]
+    [Authorize(Roles = "Player")]
     public class LobbyController : Controller
     {
         private readonly EIUBetAppContext _context;
@@ -19,23 +19,27 @@ namespace EIUBetApp.Controllers
 
         public IActionResult Index(Guid gameId)
         {
-            // Get current user id
-            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var currentPlayerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            // Get current player (single)
             var currentPlayer = _context.Player
-                .Include(p => p.User) // Include User to access username, etc.
-                .FirstOrDefault(p => p.UserId == currentUserId);
+                .Include(p => p.User)
+                .FirstOrDefault(p => p.PlayerId == currentPlayerId);
 
             ViewBag.CurrentPlayer = currentPlayer;
 
-            // Get all available players and rooms
-            var players = _context.Player.Include(p => p.User).Where(p => p.IsAvailable == true).ToList();
-            var rooms = _context.Room.Where(r => r.GameId == gameId && r.IsAvailable == true).ToList();
+            var players = _context.Player
+                .Include(p => p.User)
+                .Where(p => p.IsAvailable == true)
+                .ToList();
+
+            var rooms = _context.Room
+                .Where(r => r.GameId == gameId && r.IsAvailable == true)
+                .ToList();
 
             var model = new Tuple<IEnumerable<Player>, IEnumerable<Room>>(players, rooms);
             return View(model);
         }
+
 
 
 
