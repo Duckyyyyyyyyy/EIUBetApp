@@ -19,11 +19,11 @@ namespace EIUBetApp.Controllers
 
         public IActionResult Index(Guid gameId)
         {
-            var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var currentPlayerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var currentPlayer = _context.Player
                 .Include(p => p.User)
-                .FirstOrDefault(p => p.UserId == currentUserId);
+                .FirstOrDefault(p => p.PlayerId == currentPlayerId);
 
             ViewBag.CurrentPlayer = currentPlayer;
 

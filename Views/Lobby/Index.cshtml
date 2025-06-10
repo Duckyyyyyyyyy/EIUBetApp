@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 </head>
 <body>
-    <div class="container-fluid h-100">
+    <div class="container-fluid vh-100">
         <div class="row h-100">
             <!-- Sidebar -->
             <aside class="col-md-3 sidebar d-flex flex-column">
@@ -36,15 +36,17 @@
                 <div class="friends" id="friendsList">
                     @foreach (var player in Model.Item1)
                     {
-                        <div class="friend">
-                            <div class="friend-name">
-                                <span class="status-dot"></span>
-                                @player.User.Username
+                        if (player.PlayerId != currentPlayer.PlayerId)
+                        {
+                            <div class="friend">
+                                <div class="friend-name">
+                                    @Html.Raw(player.OnlineStatus == true ? "<span class=\"status-dot\"></span>" : "<span class=\"status-dot2\"></span>")
+                                    @player.User.Username
+                                </div>
+                                <span>@Html.Raw(player.OnlineStatus == true ? " <span>Online</span>" : "<span>Offline</span>")</span>
+                        @Html.Raw(player.OnlineStatus == true ? "<button class='btn btn-sm btn-outline-light' onclick=\"invite('" + player.User.Username + "')\">Invite</button>": "")
                             </div>
-                            <p>@(player.OnlineStatus == true ? "Online" : "Offline")</p>
-
-                            <button class="btn btn-sm btn-outline-light" onclick="invite('@player.User.Username')">Invite</button>
-                        </div>
+                        }
                     }
                 </div>
                 <a class="btn btn-outline-light logout-btn" asp-area="" asp-controller="Home" asp-action="Index">Back to Home</a>
@@ -74,11 +76,17 @@
     </div>
 
     <script>
+        const playerId = document.getElementById("playerId")?.value;
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/betHub")
+            .withUrl("/betHub?playerId=" + playerId)
             .build();
 
         connection.start().catch(err => console.error('SignalR Connection Error:', err.toString()));
+
+        connection.onreconnected(() => {
+            console.log("Reconnected to SignalR hub");
+            connection.invoke("UpdateOnlineStatus", playerId, true);
+        });
 
         connection.on("UserJoined", function (username) {
             alert(`${username} has joined the room!`);
@@ -90,7 +98,7 @@
         });
 
         function joinRoom(roomId) {
-            const playerId = document.getElementById("playerId")?.value;
+            // const playerId = document.getElementById("playerId")?.value;
 
             if (!playerId) {
                 alert("You must be logged in to join a room.");
@@ -109,9 +117,42 @@
         }
 
         // Optional invite function stub if you want
-        function invite(username) {
-            alert(`Invite sent to ${username}`);
+                function invite(username) {
+            const playerId = document.getElementById("playerId")?.value;
+
+            if (!playerId) {
+                alert("You must be logged in to send an invite.");
+                return;
+            }
+
+            connection.invoke("SendInvite", /* fromUsername */ document.getElementById("username").textContent, username)
+                .then(() => {
+                    console.log("Invite sent to", username);
+                })
+                .catch(err => {
+                    alert("Failed to send invite: " + err.toString());
+                });
         }
+                // Assuming 'connection' is your SignalR connection instance
+
+        connection.on("ReceiveInvite", function(fromUsername, roomId) {
+            // Show an invite message to the user
+            alert(`You have received an invitation from ${fromUsername} to join room ${roomId}.`);
+
+            // Optionally, ask the user if they want to join the room
+            if (confirm(`Do you want to join room ${roomId}?`)) {
+                const playerId = document.getElementById("playerId")?.value;  // or get it from wherever you store it
+
+                if (playerId) {
+                    connection.invoke("JoinRoom", roomId, playerId)
+                        .catch(err => console.error(err.toString()));
+                } else {
+                    alert("Player ID not found. Cannot join the room.");
+                }
+            }
+        });
+
+
     </script>
 </body>
 </html>
