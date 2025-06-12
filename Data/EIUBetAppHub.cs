@@ -17,11 +17,73 @@ namespace EIUBetApp.Data
         {
             _context = context;
         }
+
+        public async Task SpinDice(string roomId, int prediction, int betAmount, string playerId)
+        {
+            Random rand = new Random();
+            int[] diceResults = new int[3];
+            for (int i = 0; i < 3; i++)
+                diceResults[i] = rand.Next(1, 7);
+
+            int matchCount = diceResults.Count(val => val == prediction);
+            int winnings = matchCount * betAmount;
+
+            var parsedPlayerId = Guid.Parse(playerId);
+            var player = await _context.Player.FindAsync(parsedPlayerId);
+
+            if (player == null)
+            {
+                await Clients.Caller.SendAsync("SpinResult", new
+                {
+                    error = "Player not found."
+                });
+                return;
+            }
+
+            // Update balance: subtract bet, add winnings
+            player.Balance -= betAmount;
+            if (winnings > 0)
+                player.Balance += (winnings + betAmount);  // Refund bet + pay winnings
+
+            await _context.SaveChangesAsync();
+
+            var updatedPlayerData = new
+            {
+                playerId = playerId,
+                newBalance = player.Balance
+            };
+
+            var result = new
+            {
+                diceResults = diceResults,
+                matchCount = matchCount,
+                winnings = winnings,
+                playerId = playerId,
+                message = matchCount == 0 ? "Không trúng." : $"Trúng {matchCount} lần! Thắng: ${winnings}"
+            };
+
+            // Notify clients in the room that the dice spin started
+            await Clients.Group(roomId).SendAsync("StartSpin", diceResults);
+
+            await Task.Delay(2000); // Simulate spinning animation
+
+            // Send the spin result to clients in the room
+            await Clients.Group(roomId).SendAsync("SpinResult", result);
+
+            // Notify all clients in the room about the updated balance (optional, can be useful for quick UI update)
+            await Clients.Group(roomId).SendAsync("UpdatePlayerBalance", updatedPlayerData);
+
+            // Send the full updated player list in the room to all clients to keep UI fully synchronized
+            await SendPlayerListUpdate(Guid.Parse(roomId), roomId);
+        }
+
+
+
+        // Reset all players' ready status in a room
         public async Task ResetAllPlayersReadyStatus(string roomId)
         {
             var parsedRoomId = Guid.Parse(roomId);
 
-            // Get all players in the room and reset their ready status
             var playersInRoom = await _context.ManageRoom
                 .Where(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null)
                 .Include(mr => mr.Player)
@@ -29,15 +91,14 @@ namespace EIUBetApp.Data
                 .ToListAsync();
 
             foreach (var player in playersInRoom)
-            {
                 player.ReadyStatus = false;
-            }
 
             await _context.SaveChangesAsync();
 
-            // Notify all clients in the room about the updated player list
             await SendPlayerListUpdate(parsedRoomId, roomId);
         }
+
+        // When a client connects to the hub
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
@@ -47,7 +108,6 @@ namespace EIUBetApp.Data
             {
                 _playerConnections[playerId] = Context.ConnectionId;
 
-                // Cancel any pending offline task
                 if (_disconnectTokens.TryRemove(playerId, out var cts))
                     cts.Cancel();
 
@@ -64,18 +124,16 @@ namespace EIUBetApp.Data
             await base.OnConnectedAsync();
         }
 
+        // When a client disconnects from the hub
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var connectionId = Context.ConnectionId;
-
             Guid? playerId = null;
 
-            // Try to get playerId from _connections (players in rooms)
             if (_connections.TryGetValue(connectionId, out var roomPlayer))
                 playerId = roomPlayer.playerId;
             else
             {
-                // If not in _connections, try from _playerConnections (players not yet in rooms)
                 var playerEntry = _playerConnections.FirstOrDefault(p => p.Value == connectionId);
                 if (playerEntry.Key != Guid.Empty)
                     playerId = playerEntry.Key;
@@ -88,34 +146,21 @@ namespace EIUBetApp.Data
 
                 try
                 {
-                    await Task.Delay(2000, cts.Token); // Wait 5 seconds to allow reconnect
+                    await Task.Delay(2000, cts.Token);
                 }
                 catch (TaskCanceledException)
                 {
-                    // Reconnected, so do nothing and exit
                     return;
                 }
 
                 _disconnectTokens.TryRemove(playerId.Value, out _);
 
-                // Check if the player reconnected with a different connection ID
-                if (_playerConnections.TryGetValue(playerId.Value, out var currentConnectionId))
-                {
-                    if (currentConnectionId != connectionId)
-                    {
-                        // The player reconnected with a new connection ID,
-                        // so don't mark offline for this old connection
-                        return;
-                    }
-                }
+                if (_playerConnections.TryGetValue(playerId.Value, out var currentConnectionId) && currentConnectionId != connectionId)
+                    return;
 
-                // Remove the disconnected connectionId from _connections (if exists)
                 _connections.TryRemove(connectionId, out var removedRoomPlayer);
-
-                // Remove player from _playerConnections only if this is the latest connection
                 _playerConnections.TryRemove(playerId.Value, out _);
 
-                // Update database player online status
                 var player = await _context.Player.FindAsync(playerId.Value);
                 if (player != null)
                 {
@@ -125,7 +170,6 @@ namespace EIUBetApp.Data
 
                 if (removedRoomPlayer != default)
                 {
-                    // Player was in a room
                     var (roomId, _) = removedRoomPlayer;
 
                     var manageRoomEntry = await _context.ManageRoom
@@ -141,7 +185,6 @@ namespace EIUBetApp.Data
                 }
                 else
                 {
-                    // Player was not in any room
                     await _context.SaveChangesAsync();
                 }
 
@@ -151,7 +194,7 @@ namespace EIUBetApp.Data
             await base.OnDisconnectedAsync(exception);
         }
 
-
+        // Player joins a room
         public async Task JoinRoom(string roomId, string playerId)
         {
             var connectionId = Context.ConnectionId;
@@ -166,7 +209,7 @@ namespace EIUBetApp.Data
             var currentCount = await _context.ManageRoom
                 .CountAsync(mr => mr.RoomId == parsedRoomId && mr.LeaveAt == null);
 
-            if (currentCount >= (maxCapacity - 1))
+            if (currentCount >= maxCapacity)
                 throw new HubException("Room is full. Please try another room.");
 
             _connections[connectionId] = (parsedRoomId, parsedPlayerId);
@@ -197,7 +240,6 @@ namespace EIUBetApp.Data
             await Groups.AddToGroupAsync(connectionId, roomId);
             await SendPlayerListUpdate(parsedRoomId, roomId);
 
-            // 🟡 Return room data to caller
             var room = await _context.Room
                 .Where(r => r.RoomId == parsedRoomId)
                 .Select(r => new
@@ -211,6 +253,7 @@ namespace EIUBetApp.Data
             await Clients.Caller.SendAsync("ReceiveRoomInfo", room);
         }
 
+        // Send updated player list in the room
         private async Task SendPlayerListUpdate(Guid roomId, string roomIdStr)
         {
             var players = await _context.ManageRoom
@@ -229,6 +272,7 @@ namespace EIUBetApp.Data
             await Clients.Group(roomIdStr).SendAsync("UpdatePlayerList", players);
         }
 
+        // Player leaves a room
         public async Task LeaveRoom(string roomId, string playerId)
         {
             var connectionId = Context.ConnectionId;
@@ -256,6 +300,7 @@ namespace EIUBetApp.Data
             await SendPlayerListUpdate(parsedRoomId, roomId);
         }
 
+        // Set player's ready status
         public async Task SetReadyStatus(string roomId, string playerId, bool isReady)
         {
             var parsedRoomId = Guid.Parse(roomId);
@@ -270,6 +315,7 @@ namespace EIUBetApp.Data
             }
         }
 
+        // Send invite from one user to another
         public async Task SendInvite(string fromUsername, string toUsername)
         {
             var fromUser = await _context.User.FirstOrDefaultAsync(u => u.Username == fromUsername);
@@ -303,11 +349,8 @@ namespace EIUBetApp.Data
                 .FirstOrDefaultAsync();
 
             if (availableRoom == null)
-            {
                 throw new HubException("No available rooms to invite player.");
-            }
 
-            // Add fromPlayer to room if not already in
             var fromEntry = await _context.ManageRoom
                 .FirstOrDefaultAsync(mr => mr.PlayerId == fromPlayer.PlayerId && mr.RoomId == availableRoom.RoomId && mr.LeaveAt == null);
 
@@ -324,21 +367,17 @@ namespace EIUBetApp.Data
 
             await _context.SaveChangesAsync();
 
-            // Update tracking for inviter only
             _connections[senderConnection] = (availableRoom.RoomId, fromPlayer.PlayerId);
             _playerConnections[fromPlayer.PlayerId] = senderConnection;
 
-            // Add inviter to SignalR group
             await Groups.AddToGroupAsync(senderConnection, availableRoom.RoomId.ToString());
 
-            // Notify invitee (don't join room yet)
             await Clients.Client(targetConnection).SendAsync("ReceiveInvite", fromUsername, availableRoom.RoomId.ToString());
 
-            // Notify inviter
             await Clients.Caller.SendAsync("InviteSentSuccess", toUsername, availableRoom.RoomId.ToString());
         }
 
-        //update online status
+        // Update player's online status manually
         public async Task UpdateOnlineStatus(string playerIdStr, bool isOnline)
         {
             if (!Guid.TryParse(playerIdStr, out Guid playerId))
@@ -351,16 +390,16 @@ namespace EIUBetApp.Data
             player.OnlineStatus = isOnline;
             await _context.SaveChangesAsync();
 
-            // Notify all clients about this status change
             await Clients.All.SendAsync("PlayerOnlineStatusChanged", playerId, isOnline);
         }
+
+        // Send chat message to all in a room
         public async Task SendMessageToRoom(string roomId, string username, string message)
         {
-            // gui tin nhan den mn trong room
             await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
         }
 
-        // tao phong moi
+        // Static helper methods for notifying clients about room changes
         public static class HubExtensions
         {
             public static async Task NotifyNewRoomCreated(IHubContext<EIUBetAppHub> hubContext, Room room, Game game)
