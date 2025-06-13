@@ -111,7 +111,7 @@
             </div>
         </div>
         <div class="chat-input-container">
-            <input id="chatInput" type="text" placeholder="Enter the neon zone..." />
+            <input id="chatInput" type="text" placeholder="Enter text..." />
             <button id="sendChatBtn">Send</button>
         </div>
     </div>
@@ -308,9 +308,8 @@
             div.className = "user-card";
 
             div.innerHTML = `
-                <p>${player.Username || player.username || 'Unknown'}</p>
+                <h4>${player.Username || player.username || 'Unknown'}</h4>
                 <p>Balance: $${(player.Balance ?? player.balance ?? 0).toFixed(2)}</p>
-                <p>Status: <span class="ready-status ${isReady ? 'ready' : 'not-ready'}">${isReady ? 'Ready' : 'Not Ready'}</span></p>
                 ${isCurrentPlayer && !isReady ? `<a class="readyBtn" href="/Home/Index">Quit</a>
 
                 ` : ''}
