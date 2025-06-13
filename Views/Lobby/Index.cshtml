@@ -65,11 +65,18 @@
                                     <h5>@room.RoomName</h5>
                                     <p class="mb-0">Room ID: @room.RoomId</p>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-primary"
+                                @* <button type="button" class="btn btn-sm btn-primary"
                                         onclick="joinRoom('@room.RoomId')"
                                         aria-label="Join room @room.RoomName">
                                     Join
+                                </button> *@
+                                <button type="button" class="btn btn-sm btn-primary" aria-label="Join room @room.RoomName"
+                                        onclick="document.getElementById('joinSound').play(); joinRoom('@room.RoomId');">
+                                    Join
                                 </button>
+
+                                <audio id="joinSound" src="/sounds/join.mp3" preload="auto"></audio>
+
                             </div>
                         }
                     }
@@ -82,8 +89,14 @@
             const playerId = document.getElementById("playerId")?.value;
                     const connection = new signalR.HubConnectionBuilder()
                 .withUrl("/betHub?playerId=" + playerId)
+                .withAutomaticReconnect()
                 .build();
-
+                    connection.start().then(() => {
+            console.log("Connected to SignalR hub");
+            connection.invoke("JoinRoom", roomId, playerId);
+        }).catch(err => {
+            console.error("SignalR failed to connect:", err.toString());
+        });
             window.addEventListener("beforeunload", () => {
                 connection.stop();
             });

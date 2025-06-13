@@ -37,8 +37,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // SignalR support
 builder.Services.AddSignalR(options =>
 {
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // default: 30s
-    options.KeepAliveInterval = TimeSpan.FromSeconds(1);      // default: 15s
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60); // tăng timeout để client không disconnect sớm
+    options.KeepAliveInterval = TimeSpan.FromSeconds(10);      // gửi ping 10s 1 lần, đủ giữ kết nối ổn định
 });
 
 var app = builder.Build();

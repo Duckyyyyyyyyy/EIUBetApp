@@ -87,6 +87,8 @@
             <p id="resultText"></p>
             <div class="bgeffect" id="bgeffect"></div>
             <div class="result" id="resultText"></div>
+            <audio id="loseSound" src="/sounds/lose-sound.mp3" preload="auto"></audio>
+            <audio id="winSound" src="/sounds/win.mp3" preload="auto"></audio>
         </section>
     </div>
 
@@ -152,16 +154,15 @@
         // Server-provided roomId and playerId (inject from Razor)
         const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
         const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
-
-        // Setup SignalR connection
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/betHub?playerId=" + playerId)
+            .withAutomaticReconnect()  // ✅ Enables automatic reconnect if connection drops
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
         connection.start().then(() => {
             console.log("Connected to SignalR hub");
-            connection.invoke("JoinRoom", roomId, playerId);
+            connection.invoke("JoinRoom", roomId, playerId); // ✅ Safe to invoke after connection starts
         }).catch(err => console.error(err.toString()));
 
         // Disable spin button while spinning
@@ -237,6 +238,12 @@
             const diceNames = result.diceResults.map(x => nameMap[x]);
             resultDiv.textContent = `Kết quả: ${diceNames.join(", ")} — ${result.message}`;
 
+
+                    if (result.message.includes("Không trúng")) {
+            document.getElementById("loseSound").play();
+        }else{
+              document.getElementById("winSound").play();
+        }
             setSpinButton(true);
         });
 
@@ -252,7 +259,7 @@
         // ReceiveMessage handler
         connection.on("ReceiveMessage", function (username, message, time) {
             const msgDiv = document.createElement("div");
-            msgDiv.innerHTML = `<strong>${username}</strong> <small>${time}</small><br>${message}`;
+            msgDiv.innerHTML = `<strong>👤 ${username}</strong> <small>${time}</small><br>${message}`;
             msgDiv.style.marginBottom = "10px";
 
             const chatMessages = document.getElementById("chatMessages");
