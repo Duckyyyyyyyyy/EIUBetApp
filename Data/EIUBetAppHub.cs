@@ -12,7 +12,7 @@ namespace EIUBetApp.Data
         private static readonly ConcurrentDictionary<string, (Guid roomId, Guid playerId)> _connections = new();
         private static readonly ConcurrentDictionary<Guid, string> _playerConnections = new();
         private static readonly ConcurrentDictionary<Guid, CancellationTokenSource> _disconnectTokens = new();
-
+       
         public EIUBetAppHub(EIUBetAppContext context)
         {
             _context = context;
@@ -45,6 +45,21 @@ namespace EIUBetApp.Data
             if (winnings > 0)
                 player.Balance += (winnings + betAmount);  // Refund bet + pay winnings
 
+            // Save the game log
+            var logEntry = new Logs
+            {
+                LogId = Guid.NewGuid(),
+                PlayerId = parsedPlayerId,
+                Action = prediction.ToString(), // Their prediction as string
+                GameResult = $"{string.Join(",", diceResults)}; Matches: {matchCount}; Winnings: {winnings}",
+                TimeAt = DateTime.UtcNow,
+                RoomId = Guid.Parse(roomId),
+                IsDelete = false,
+                GameId = Guid.Parse("868773BA-CDEF-40CA-8F39-81AF12910B70")
+            };
+
+            _context.Logs.Add(logEntry);
+
             await _context.SaveChangesAsync();
 
             var updatedPlayerData = new
@@ -70,16 +85,16 @@ namespace EIUBetApp.Data
             // Send the spin result to clients in the room
             await Clients.Group(roomId).SendAsync("SpinResult", result);
 
-            // Notify all clients in the room about the updated balance (optional, can be useful for quick UI update)
+            // Notify all clients in the room about the updated balance (optional)
             await Clients.Group(roomId).SendAsync("UpdatePlayerBalance", updatedPlayerData);
 
-            // Send the full updated player list in the room to all clients to keep UI fully synchronized
+            // Send the full updated player list in the room to all clients to keep UI synchronized
             await SendPlayerListUpdate(Guid.Parse(roomId), roomId);
         }
 
 
 
-        // Reset all players' ready status in a room
+        //Reset all players' ready status in a room
         public async Task ResetAllPlayersReadyStatus(string roomId)
         {
             var parsedRoomId = Guid.Parse(roomId);
