@@ -24,7 +24,7 @@
 }
 
 .user-card {
-    background: #333;
+    background: #222;
     padding: 15px;
     border-radius: 8px;
     color: white;
@@ -46,6 +46,7 @@
     gap: 30px;
 }
 
+/* DICE STYLES — UNTOUCHED */
 .containerD {
     height: 150px;
     width: 150px;
@@ -53,6 +54,13 @@
     transition: transform 1s ease-in-out;
     position: relative;
 }
+
+    .containerD div img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 16px;
+    }
 
     .containerD div {
         height: 100%;
@@ -67,7 +75,6 @@
         opacity: 0.9;
     }
 
-/* Dice face positioning (same as before) */
 .left {
     transform: translate(75px) rotateY(90deg);
 }
@@ -82,17 +89,14 @@
 
 .back {
     transform: translateZ(75px) rotateZ(90deg);
-    grid-template-columns: 70px auto;
 }
 
 .up {
     transform: translateY(-75px) rotateX(90deg);
-    grid-template-columns: 30px 30px 20px;
 }
 
 .down {
     transform: translateY(75px) rotateX(90deg);
-    grid-template-columns: auto auto auto;
 }
 
 .dot {
@@ -101,16 +105,7 @@
     background: white;
     border-radius: 50%;
 }
-
-.btn {
-    height: 60px;
-    width: 250px;
-    font-size: 25px;
-    background: #FB980D;
-    cursor: pointer;
-    opacity: 0.9;
-    color: white;
-}
+/* END DICE STYLES */
 
 .bgeffect {
     height: 500px;
@@ -122,6 +117,7 @@
     filter: blur(550px);
 }
 
+/* Buttons and UI Controls */
 .prediction-buttons {
     display: flex;
     justify-content: center;
@@ -133,7 +129,16 @@
         padding: 10px 15px;
         font-size: 16px;
         cursor: pointer;
+        background: #FB980D;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        transition: background 0.3s ease;
     }
+
+        .prediction-buttons button:hover {
+            background: #e58000;
+        }
 
 .btn {
     display: block;
@@ -141,18 +146,117 @@
     padding: 12px 20px;
     font-size: 18px;
     cursor: pointer;
+    background: #FB980D;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    transition: background 0.3s ease;
 }
+
+    .btn:hover {
+        background: #e58000;
+    }
 
 .readyBtn {
     margin: 1rem auto;
     padding: 12px 20px;
     font-size: 18px;
     cursor: pointer;
+    background: #FB980D;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    transition: background 0.3s ease;
 }
+
+    .readyBtn:hover {
+        background: #e58000;
+    }
 
 .result {
     text-align: center;
     font-size: 1.2rem;
     margin-top: 1rem;
     font-weight: bold;
+    color: #FB980D;
+}
+/* Sidebar Styling */
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background-color: #111; /* darker tone */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-right: 2px solid #333;
+    box-shadow: 2px 0 10px rgba(255, 153, 0, 0.2);
+}
+
+/* User Card */
+.user-card {
+    background: linear-gradient(145deg, #1a1a1a, #292929);
+    padding: 16px;
+    border-radius: 10px;
+    color: #fff;
+    border: 1px solid #444;
+    box-shadow: 0 0 12px rgba(255, 138, 0, 0.4);
+    transition: transform 0.2s ease;
+}
+.user-card:hover {
+    transform: scale(1.03);
+}
+.user-card h4 {
+    margin: 0 0 5px;
+    color: #ffaa33;
+}
+.user-card p {
+    margin: 4px 0;
+    font-size: 0.95rem;
+    color: #ccc;
+}
+.user-card .status {
+    font-weight: bold;
+    color: #00ffcc;
+}
+
+/* General Button Style */
+button {
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn,
+.readyBtn,
+.predict-btn {
+/*    background: #FB980D;*/
+    color: white;
+    padding: 12px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 138, 0, 0.5);
+}
+
+.btn:hover,
+.readyBtn:hover,
+.predict-btn:hover {
+    background: #ffaa33;
+    transform: scale(1.05);
+}
+
+.predict-btn {
+    font-size: 16px;
+    padding: 10px 16px;
+}
+
+a {
+    display: inline-block;
+    margin-top: 8px;
+    color: #ff7777;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
 }

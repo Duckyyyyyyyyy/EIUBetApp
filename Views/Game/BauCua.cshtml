@@ -1,0 +1,330 @@
+﻿
+@{
+    Layout = "_GameLayout";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Dice Game</title>
+    <link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+    <style>
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+            opacity: 0;
+            transition: opacity 0.5s ease, visibility 0.5s ease 0.5s;
+        }
+
+            #toast.show {
+                visibility: visible;
+                opacity: 1;
+                transition-delay: 0s;
+            }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <aside class="sidebar" id="playerContainer"></aside>
+
+        <section class="game-section">
+            <div class="dice-wrapper">
+                <!-- Dice containers: dice1, dice2, dice3 -->
+                <div class="containerD" id="dice1">
+                    <div class="left"><img src="~/Assets/bau.png" alt="bau.png" /></div>
+                    <div class="right"><img src="~/Assets/nai.png" alt="nai.png" /></div>
+                    <div class="front"><img src="~/Assets/cua.png" alt="cua.png" /></div>
+                    <div class="back"><img src="~/Assets/ca.png" alt="ca.png" /></div>
+                    <div class="up"><img src="~/Assets/tom.png" alt="tom.png" /></div>
+                    <div class="down"><img src="~/Assets/ga.png" alt="ga.png" /></div>
+                </div>
+                <div class="containerD" id="dice2">
+                    <div class="left"><img src="~/Assets/bau.png" alt="bau.png" /></div>
+                    <div class="right"><img src="~/Assets/nai.png" alt="nai.png" /></div>
+                    <div class="front"><img src="~/Assets/cua.png" alt="cua.png" /></div>
+                    <div class="back"><img src="~/Assets/ca.png" alt="ca.png" /></div>
+                    <div class="up"><img src="~/Assets/tom.png" alt="tom.png" /></div>
+                    <div class="down"><img src="~/Assets/ga.png" alt="ga.png" /></div>
+                </div>
+                <div class="containerD" id="dice3">
+                    <div class="left"><img src="~/Assets/bau.png" alt="bau.png" /></div>
+                    <div class="right"><img src="~/Assets/nai.png" alt="nai.png" /></div>
+                    <div class="front"><img src="~/Assets/cua.png" alt="cua.png" /></div>
+                    <div class="back"><img src="~/Assets/ca.png" alt="ca.png" /></div>
+                    <div class="up"><img src="~/Assets/tom.png" alt="tom.png" /></div>
+                    <div class="down"><img src="~/Assets/ga.png" alt="ga.png" /></div>
+                </div>
+            </div>
+
+            <!-- Prediction Buttons -->
+            <div class="prediction-buttons">
+                <button class="predict-btn" data-value="1">Bầu</button>
+                <button class="predict-btn" data-value="2">Nai</button>
+                <button class="predict-btn" data-value="3">Cua</button>
+                <button class="predict-btn" data-value="4">Cá</button>
+                <button class="predict-btn" data-value="5">Tôm</button>
+                <button class="predict-btn" data-value="6">Gà</button>
+            </div>
+
+            <div class="balance-section">
+                <p>Balance: $<span id="balanceDisplay">@ViewBag.Balance</span></p>
+                <input id="betAmountInput" type="number" placeholder="Enter Bet Amount" min="1" />
+            </div>
+
+            <button class="btn" id="spinBtn">Spin</button>
+            <p id="resultText"></p>
+            <div class="bgeffect" id="bgeffect"></div>
+            <div class="result" id="resultText"></div>
+        </section>
+    </div>
+
+    <div id="toast"></div>
+
+    <!-- Chat popup -->
+    <div id="chatBox" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        max-height: 400px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+        font-family: sans-serif;
+        color:black;">
+        <div style="background-color: #007bff; color: white; padding: 10px; font-weight: bold;">💬 Room Chat</div>
+        <div id="chatMessages" style="flex: 1; padding: 10px; overflow-y: auto;"></div>
+        <div style="display: flex; border-top: 1px solid #ccc;">
+            <input id="chatInput" type="text" placeholder="Type message..." style="flex: 1; padding: 8px; border: none;" />
+            <button id="sendChatBtn" style="padding: 8px 12px; background-color: #007bff; color: white; border: none;">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const btn = document.getElementById("spinBtn");
+        const diceContainers = [
+            document.querySelector("#dice1"),
+            document.querySelector("#dice2"),
+            document.querySelector("#dice3")
+        ];
+        const predictButtons = document.querySelectorAll(".predict-btn");
+        const resultDiv = document.getElementById("resultText");
+        const balanceDisplay = document.getElementById("balanceDisplay");
+        const betAmountInput = document.getElementById("betAmountInput");
+
+        let userPrediction = null;
+
+        // Rotations by dice face value
+        const rotations = {
+            4: [0, 0],
+            3: [0, 180],
+            2: [0, 90],
+            1: [0, -90],
+            5: [-90, 0],
+            6: [90, 0]
+        };
+
+        // User prediction selection
+        predictButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                userPrediction = parseInt(btn.dataset.value);
+                predictButtons.forEach(b => b.style.backgroundColor = "");
+                btn.style.backgroundColor = "#aaffaa";
+            });
+        });
+
+        // Server-provided roomId and playerId (inject from Razor)
+        const roomId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomId));
+        const playerId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.PlayerId));
+
+        // Setup SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/betHub?playerId=" + playerId)
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        connection.start().then(() => {
+            console.log("Connected to SignalR hub");
+            connection.invoke("JoinRoom", roomId, playerId);
+        }).catch(err => console.error(err.toString()));
+
+        // Disable spin button while spinning
+        function setSpinButton(enabled) {
+            btn.disabled = !enabled;
+        }
+
+        // Spin button click triggers server spin request
+        btn.addEventListener("click", () => {
+            if (!userPrediction) {
+                resultDiv.textContent = "Please choose a number to predict.";
+                return;
+            }
+            const betAmount = parseInt(betAmountInput.value);
+            if (isNaN(betAmount) || betAmount <= 0) {
+                resultDiv.textContent = "Please enter a valid bet amount.";
+                return;
+            }
+            const currentBalance = parseInt(balanceDisplay.textContent);
+            if (betAmount > currentBalance) {
+                resultDiv.textContent = "Insufficient balance for this bet.";
+                return;
+            }
+
+            setSpinButton(false);
+            resultDiv.textContent = "Spinning...";
+
+            // Call server to start spin
+            connection.invoke("SpinDice", roomId, userPrediction, betAmount, playerId)
+                .catch(err => {
+                    console.error(err);
+                    resultDiv.textContent = "Error during spin.";
+                    setSpinButton(true);
+                });
+        });
+
+        // Server tells clients to start spin animation
+        connection.on("StartSpin", (diceResults) => {
+            diceContainers.forEach(dice => {
+                dice.style.transition = "transform 2s ease-out";
+                dice.style.transform = `rotateX(${360 * 2}deg) rotateY(${360 * 2}deg)`; // Spin multiple times
+            });
+            resultDiv.textContent = "Rolling dice...";
+        });
+
+        // Server sends final spin results after spin
+        connection.on("SpinResult", (result) => {
+            // Apply final rotation
+            result.diceResults.forEach((val, idx) => {
+                const rotation = rotations[val];
+                if (rotation && diceContainers[idx]) {
+                    diceContainers[idx].style.transition = "transform 1s ease-out";
+                    diceContainers[idx].style.transform =
+                        `rotateX(${rotation[0]}deg) rotateY(${rotation[1]}deg)`;
+                }
+            });
+
+            // Removed client demo balance update here (handled on server)
+
+            // Show result message
+            const nameMap = {
+                1: "Bầu",
+                2: "Nai",
+                3: "Cua",
+                4: "Cá",
+                5: "Tôm",
+                6: "Gà"
+            };
+            const diceNames = result.diceResults.map(x => nameMap[x]);
+            resultDiv.textContent = `Kết quả: ${diceNames.join(", ")} — ${result.message}`;
+
+            setSpinButton(true);
+        });
+
+        // Server sends updated balance after spin (or other events)
+        connection.on("UpdatePlayerBalance", (data) => {
+            if (data.playerId === playerId) {
+                balanceDisplay.textContent = data.newBalance;
+            }
+        });
+
+               // Remove previous chat event listeners and handlers related to chatMessages here
+
+        // ReceiveMessage handler
+        connection.on("ReceiveMessage", function (username, message, time) {
+            const msgDiv = document.createElement("div");
+            msgDiv.innerHTML = `<strong>${username}</strong> <small>${time}</small><br>${message}`;
+            msgDiv.style.marginBottom = "10px";
+
+            const chatMessages = document.getElementById("chatMessages");
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // Send chat message on button click
+        document.getElementById("sendChatBtn").addEventListener("click", function () {
+            const input = document.getElementById("chatInput");
+            const msg = input.value.trim();
+            if (msg !== "") {
+                connection.invoke("SendMessageToRoom", roomId, '@ViewBag.Username', msg)
+                    .catch(err => console.error(err.toString()));
+                input.value = "";
+            }
+        });
+
+        // Send chat message on Enter key
+        document.getElementById("chatInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                document.getElementById("sendChatBtn").click();
+            }
+        });
+
+        // Show toast notifications from server
+        connection.on("ShowToast", function (message) {
+            showToast(message);
+        });
+
+
+        // Toast notification helper
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.textContent = msg;
+            toast.className = "show";
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+                connection.on("UpdatePlayerList", function (players) {
+            const container = document.getElementById("playerContainer");
+            container.innerHTML = "";
+
+            const currentPlayerIdLower = (playerId || "").trim().toLowerCase();
+
+                   players.forEach(player => {
+            const playerIdLower = (player.PlayerId || player.playerId || "").toString().trim().toLowerCase();
+            const isCurrentPlayer = playerIdLower === currentPlayerIdLower;
+            const isReady = player.ReadyStatus === true;
+
+            const div = document.createElement("div");
+            div.className = "user-card";
+
+            div.innerHTML = `
+                <p>${player.Username || player.username || 'Unknown'}</p>
+                <p>Balance: $${(player.Balance ?? player.balance ?? 0).toFixed(2)}</p>
+                <p>Status: <span class="ready-status ${isReady ? 'ready' : 'not-ready'}">${isReady ? 'Ready' : 'Not Ready'}</span></p>
+                ${isCurrentPlayer && !isReady ? `<button class="readyBtn">Ready</button>
+                <a class="btn" href="/Home/Index">Quit</a>
+                ` : ''}
+            `;
+
+            if (isCurrentPlayer && !isReady) {
+                const btn = div.querySelector(".readyBtn");
+                btn.addEventListener("click", () => {
+                    connection.invoke("SetReadyStatus", player.PlayerId || player.playerId, true).catch(console.error);
+                });
+            }
+
+            container.appendChild(div);
+        });
+
+
+        });
+
+
+    </script>
+</body>
+</html>

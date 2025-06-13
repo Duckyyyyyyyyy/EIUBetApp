@@ -1,13 +1,17 @@
 ﻿@{
     ViewData["Title"] = "Home";
 }
+@{
+    var playerId = TempData["PlayerId"]?.ToString();
+}
+@model List<EIUBetApp.Models.Game>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>@ViewData["Title"] - EIUBetApp</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+   
     <style>
         body, html {
             height: 100%;
@@ -18,7 +22,6 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f8f9fa;
         }
         .game-button {
             width: 200px;
@@ -50,11 +53,41 @@
     </style>
 </head>
 <body>
-    <div class="center-container">
-        <div class="game-button" onclick="location.href='@Url.Action("Index", "Lobby")'">
-            <img src="~/Assets/tai_xiu.png" alt="Tài xỉu" />
-            <span>Tài xỉu</span>
+
+<div class="center-container">
+    @foreach (var game in Model)
+    {
+        <div class="game-button me-2" onclick="location.href='@Url.Action("Index", "Lobby", new { gameId = game.GameId })'">
+            <img src="~/Assets/@game.Thumbnail" alt="@game.Name" />
+            <span>@game.Name</span>
         </div>
-    </div>
+    }
+</div>
+    @if (!string.IsNullOrEmpty(playerId))
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+        <script>
+            const playerId = '@playerId';
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/betHub?playerId=" + playerId)
+                .withAutomaticReconnect()
+                .build();
+
+                            connection.onreconnected(() => {
+                console.log("Reconnected to SignalR hub");
+                connection.invoke("UpdateOnlineStatus", playerId, true);
+            });
+
+            connection.start()
+                .then(() => {
+                    console.log("Connected to SignalR hub");
+                    connection.invoke("UpdateOnlineStatus", playerId, true)
+                        .catch(err => console.error(err.toString()));
+                })
+                .catch(err => console.error("SignalR connection failed:", err));
+        </script>
+    }
+
 </body>
 </html>
