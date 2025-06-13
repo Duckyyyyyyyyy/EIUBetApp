@@ -2,6 +2,7 @@
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -161,5 +162,54 @@ namespace EIUBetApp.Controllers
         {
             return View();
         }
+
+        // profile
+        [Authorize(Roles = "Player")]
+        public async Task<IActionResult> Profile()
+        {
+            var playerIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (playerIdStr == null) return RedirectToAction("Login");
+
+            var playerId = Guid.Parse(playerIdStr);
+            var player = await _context.Player.Include(p => p.User)
+                                              .FirstOrDefaultAsync(p => p.PlayerId == playerId);
+            if (player == null) return NotFound();
+
+            var vm = new UpdateProfileViewModel
+            {
+                PlayerId = player.PlayerId,
+                Username = player.User?.Username ?? "",
+                Email = player.User?.Email ?? ""
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Player")]
+        public async Task<IActionResult> Profile(UpdateProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var player = await _context.Player.Include(p => p.User)
+                                              .FirstOrDefaultAsync(p => p.PlayerId == model.PlayerId);
+            if (player == null || player.User == null) return NotFound();
+
+            // Optional: check if email/username is already used
+            bool emailExists = await _context.User.AnyAsync(u => u.Email == model.Email && u.UserId != player.User.UserId);
+            bool usernameExists = await _context.User.AnyAsync(u => u.Username == model.Username && u.UserId != player.User.UserId);
+            if (emailExists) ModelState.AddModelError("Email", "Email is already in use.");
+            if (usernameExists) ModelState.AddModelError("Username", "Username is already taken.");
+
+            if (!ModelState.IsValid) return View(model);
+
+            player.User.Email = model.Email;
+            player.User.Username = model.Username;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Profile updated successfully.";
+            return RedirectToAction("Profile");
+        }
+
     }
 }
