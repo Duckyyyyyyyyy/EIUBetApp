@@ -43,6 +43,13 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Dashboard">Admin</a>
                             </li>
                         }
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Player"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Profile">👤 Profile</a>
+                            </li>
+                        }
+
                     </ul>
 
                     <!-- Right side: user info and login/logout -->
