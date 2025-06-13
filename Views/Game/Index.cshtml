@@ -1,12 +1,11 @@
 ﻿@{
-
-	Layout = "_GameLayout";
+    Layout = "_GameLayout";
 }
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Game Tài Xỉu</title>
-	<link rel="stylesheet" href="~/css/SicBo.css" asp-append-version="true" />
+    <title>Game Tài Xỉu</title>
+    <link rel="stylesheet" href="~/css/SicBo.css" asp-append-version="true" />
 </head>
 <body>
     <div class="main-layout">
@@ -25,7 +24,6 @@
                 <div class="card-body">
                     <h5 class="card-title text-success fw-bold">👤 @ViewBag.Username</h5>
                     <p class="card-text mb-1"><i class="bi bi-envelope-fill me-2"></i>Email: <span class="text-muted">@ViewBag.Email</span></p>
-                    @* <p class="card-text mb-1"><i class="bi bi-wallet-fill me-2"></i>Ingame money: <span id="balance" class="text-primary fw-semibold">$100</span></p> *@
                     <p class="card-text"><i class="bi bi-cash-stack me-2"></i>Balance: <span id="balance" class="fw-bold text-danger">$@ViewBag.Balance</span></p>
                 </div>
             </div>
@@ -45,14 +43,7 @@
             <div id="latestResults" class="text-center p-3 border mb-3">
                 <h3>8 Lần Kết Quả Mới Nhất</h3>
                 <div id="resultsContainer">
-                    <span class="result-badge win">Win: 11</span>
-                    <span class="result-badge lose">Lose: 7</span>
-                    <span class="result-badge win">Win: 14</span>
-                    <span class="result-badge draw">Draw: 3</span>
-                    <span class="result-badge lose">Lose: 8</span>
-                    <span class="result-badge win">Win: 16</span>
-                    <span class="result-badge lose">Lose: 6</span>
-                    <span class="result-badge win">Win: 13</span>
+                    <!-- Results will be populated dynamically -->
                 </div>
             </div>
 
@@ -106,6 +97,11 @@
         let balance = @ViewBag.Balance;
         let latestResults = [];
 
+        // Initialize with empty results container
+        $(document).ready(function () {
+            updateResultsDisplay();
+        });
+
         // Bet amount selection
         $('.bet-amount-btn').click(function () {
             betAmount = parseInt($(this).data('amount'));
@@ -134,6 +130,15 @@
                 return;
             }
 
+            if (balance < betAmount) {
+                $("#resultText").text("⚠️ Số dư không đủ để đặt cược!");
+                $("#resultText").css('color', '#ff6b6b');
+                return;
+            }
+
+            // Disable spin button during animation
+            $(this).prop('disabled', true);
+
             // Simulate dice rolling animation
             const diceElements = ['#dice1', '#dice2', '#dice3'];
             let rollCount = 0;
@@ -155,6 +160,13 @@
                 url: "/Game/Spin",
                 data: { prediction: prediction, betAmount: betAmount },
                 success: function (data) {
+                    if (data.error) {
+                        $("#resultText").text("⚠️ " + data.error);
+                        $("#resultText").css('color', '#ff6b6b');
+                        $("#spinBtn").prop('disabled', false);
+                        return;
+                    }
+
                     const dice = data.dice;
                     const sum = data.sum;
                     const result = data.result;
@@ -165,15 +177,20 @@
                     $('#dice2').text(`🎲 ${dice[1]}`);
                     $('#dice3').text(`🎲 ${dice[2]}`);
 
-                    // Update result
+                    // Determine if player won, lost, or drew
+                    let gameOutcome;
                     let resultMessage = "";
+
                     if (result === prediction) {
+                        gameOutcome = "win";
                         resultMessage = `🎉 Bạn đã thắng! (${sum})`;
                         $("#resultText").css('color', 'green');
                     } else if (result === "hoa") {
+                        gameOutcome = "draw";
                         resultMessage = `🤝 Hòa rồi! (${sum})`;
                         $("#resultText").css('color', 'gray');
                     } else {
+                        gameOutcome = "lose";
                         resultMessage = `😢 Thua rồi! (${sum})`;
                         $("#resultText").css('color', 'red');
                     }
@@ -181,43 +198,74 @@
                     $("#resultText").text(resultMessage);
                     $("#sumResult").text(`Tổng điểm: ${sum}`);
                     $("#balance").text(`$${balance}`);
+
+                    // Add this result to latest results
+                    const newResult = {
+                        sum: sum,
+                        result: result,
+                        prediction: prediction,
+                        outcome: gameOutcome,
+                        timestamp: new Date()
+                    };
+
+                    updateLatestResults(newResult);
+
+                    // Re-enable spin button
+                    $("#spinBtn").prop('disabled', false);
                 },
                 error: function () {
                     $("#resultText").text("⚠️ Có lỗi xảy ra khi gọi API.");
                     $("#resultText").css('color', '#ff6b6b');
+                    $("#spinBtn").prop('disabled', false);
                 }
             });
         }
 
-
         function updateLatestResults(newResult) {
+            // Add new result to the beginning of the array
             latestResults.unshift(newResult);
+
+            // Keep only the latest 8 results
             if (latestResults.length > 8) {
-                latestResults.pop();
+                latestResults = latestResults.slice(0, 8);
             }
 
+            updateResultsDisplay();
+        }
+
+        function updateResultsDisplay() {
             const container = document.getElementById("resultsContainer");
             container.innerHTML = "";
+
+            if (latestResults.length === 0) {
+                container.innerHTML = '<span class="text-muted">Chưa có kết quả nào</span>';
+                return;
+            }
 
             latestResults.forEach(r => {
                 const span = document.createElement("span");
                 span.classList.add("result-badge");
 
+                let displayText = "";
+                let resultType = "";
+
+                // Determine the display based on the actual game result
                 if (r.result === "hoa") {
                     span.classList.add("draw");
-                    span.textContent = `Draw: ${r.sum}`;
-                } else if (r.prediction === r.result) {
+                    displayText = `Hòa: ${r.sum}`;
+                } else if (r.outcome === "win") {
                     span.classList.add("win");
-                    span.textContent = `Win: ${r.sum}`;
+                    displayText = `Thắng: ${r.sum}`;
                 } else {
                     span.classList.add("lose");
-                    span.textContent = `Lose: ${r.sum}`;
+                    displayText = `Thua: ${r.sum}`;
                 }
+
+                span.textContent = displayText;
+                span.title = `${r.result.toUpperCase()} - ${new Date(r.timestamp).toLocaleTimeString()}`;
                 container.appendChild(span);
             });
         }
     </script>
 </body>
-
 </html>
-
