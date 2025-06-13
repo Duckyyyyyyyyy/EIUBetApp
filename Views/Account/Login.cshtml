@@ -16,7 +16,7 @@
             max-width: 420px;
             margin: 5% auto;
             padding: 2rem;
-            background: linear-gradient(145deg, #3b261a, #2e1a10);
+            background: linear-gradient(145deg, #3b261a, #2e1a10); /* faux depth effect */
             border: 3px double #b78d4c;
             border-radius: 1.2rem;
             box-shadow: 0 0 25px rgba(183, 141, 76, 0.2), 0 0 10px rgba(0, 0, 0, 0.4);
@@ -30,10 +30,11 @@
                 position: absolute;
                 inset: 0;
                 border-radius: 1.2rem;
-                background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 70%);
+                background: radial-gradient( circle at top left, rgba(255, 255, 255, 0.05), transparent 70% );
                 z-index: 0;
             }
 
+        /* NAV TABS */
         .nav-tabs .nav-link {
             font-family: 'Bebas Neue', cursive;
             font-size: 1.4rem;
@@ -66,12 +67,14 @@
                 text-shadow: none;
             }
 
+        /* LABELS */
         label {
             color: #f8e4c2;
             font-weight: 600;
             font-size: 0.95rem;
         }
 
+        /* INPUT FIELDS */
         input.form-control {
             border-radius: 0.5rem;
             background-color: #fffdf8;
@@ -87,6 +90,7 @@
                 outline: none;
             }
 
+        /* BUTTONS (only hover defined here; use shared styles elsewhere) */
         .btn-primary:hover,
         .btn-success:hover {
             background-color: #6f3d2b;
@@ -94,15 +98,18 @@
             box-shadow: 0 0 12px rgba(183, 141, 76, 0.5);
         }
 
+        /* ERROR TEXT */
         .text-danger {
             color: #ff9980;
         }
 
+        /* CONTENT AREA */
         .tab-content {
             margin-top: 1.5rem;
             z-index: 1;
             position: relative;
         }
+
     </style>
 </head>
 
@@ -128,16 +135,15 @@
             <div class="tab-pane fade show active" id="signin" role="tabpanel" aria-labelledby="signin-tab">
                 <form asp-action="Login" asp-controller="Account" method="post" novalidate>
                     <div class="mb-3">
-                        <label for="UserNameSignin" class="form-label">UserName</label>
-                        <input type="text" id="UserNameSignin" name="UserName" class="form-control" required />
-                        <span id="usernameStatusSignin" style="font-size:0.9rem;"></span>
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
-                        <label for="EmailSignin" class="form-label">Email</label>
-                        <input type="email" id="EmailSignin" name="Email" class="form-control" required />
-                        <span id="emailStatusSignin" style="font-size:0.9rem;"></span>
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-
                     <button type="submit" class="btn btn-primary w-100">Sign In</button>
                 </form>
             </div>
@@ -146,72 +152,87 @@
             <div class="tab-pane fade" id="signup" role="tabpanel" aria-labelledby="signup-tab">
                 <form asp-action="Register" asp-controller="Account" method="post" novalidate>
                     <div class="mb-3">
-                        <label for="UserNameSignUp" class="form-label">UserName</label>
-                        <input type="text" id="UserNameSignUp" name="UserName" class="form-control" required />
-                        <span id="usernameStatusSignUp" style="font-size:0.9rem;"></span>
+                        <label for="UserName" class="form-label">UserName</label>
+                        <input type="text" id="UserName" name="UserName" class="form-control" required />
+                        <small id="usernameFeedback" style="color:#ff9980; display:none;"></small>
                     </div>
+
                     <div class="mb-3">
                         <label for="EmailSignUp" class="form-label">Email</label>
                         <input type="email" id="EmailSignUp" name="Email" class="form-control" required />
-                        <span id="emailStatusSignUp" style="font-size:0.9rem;"></span>
+                        <small id="emailFeedback" style="color:#ff9980; display:none;"></small>
                     </div>
+
                     <div class="mb-3">
                         <label for="PasswordSignUp" class="form-label">Password</label>
                         <input type="password" id="PasswordSignUp" name="Password" class="form-control" required />
                     </div>
                     <div class="mb-3">
                         <label for="Phone" class="form-label">Phone Number</label>
-                        <input type="tel" id="Phone" name="Phone" class="form-control" pattern="\d{10}"
-                               placeholder="10-digit number" required />
+                        <input type="tel" id="Phone" name="Phone" class="form-control" pattern="\d{10}" placeholder="10-digit number" required />
                     </div>
                     <button type="submit" class="btn btn-success w-100">Sign Up</button>
                 </form>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
-        $(function () {
-            // Username live check on Sign Up tab
-            $('#UserNameSignUp').on('input', function () {
-                const username = $(this).val().trim();
-                if (username.length >= 3) {
-                    $.getJSON('@Url.Action("CheckUsername", "Account")', { username }, function (data) {
-                        if (data.exists) {
-                            $('#usernameStatusSignUp').text('Username is already taken').css('color', 'red');
-                        } else {
-                            $('#usernameStatusSignUp').text('Username is available').css('color', 'green');
-                        }
-                    });
-                } else {
-                    $('#usernameStatusSignUp').text('');
-                }
-            });
+        // Helper function to call your API endpoints
+        async function checkExists(url, paramName, value) {
+          if (!value.trim()) return false;
 
-            // Email live check on Sign Up tab
-            $('#EmailSignUp').on('input', function () {
-                const email = $(this).val().trim();
-                if (email.length >= 5) {
-                    $.getJSON('@Url.Action("CheckEmail", "Account")', { email }, function (data) {
-                        if (data.exists) {
-                            $('#emailStatusSignUp').text('Email is already in use').css('color', 'red');
-                        } else {
-                            $('#emailStatusSignUp').text('Email is available').css('color', 'green');
-                        }
-                    });
-                } else {
-                    $('#emailStatusSignUp').text('');
-                }
-            });
+          try {
+            const response = await fetch(`${url}?${paramName}=${encodeURIComponent(value)}`);
+            if (!response.ok) return false;
+            const data = await response.json();
+            return data.exists;
+          } catch {
+            return false;
+          }
+        }
 
-            // Optionally, you can also add live check on Sign In tab inputs, just update selectors and messages
-            // But typically login doesn't need availability check
-        });
+        // Get inputs and feedback elements
+        const usernameInput = document.getElementById('UserName');
+        const usernameFeedback = document.getElementById('usernameFeedback');
+
+        const emailInput = document.getElementById('EmailSignUp');
+        const emailFeedback = document.getElementById('emailFeedback');
+
+        // Debounce helper so we don't spam API on every keystroke
+        function debounce(fn, delay) {
+          let timer;
+          return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+          };
+        }
+
+        // Check username uniqueness live
+        usernameInput.addEventListener('input', debounce(async () => {
+          const exists = await checkExists('/Account/CheckUsername', 'username', usernameInput.value);
+          if (exists) {
+            usernameFeedback.style.display = 'inline';
+            usernameFeedback.textContent = 'Username already taken';
+          } else {
+            usernameFeedback.style.display = 'none';
+            usernameFeedback.textContent = '';
+          }
+        }, 400));
+
+        // Check email uniqueness live
+        emailInput.addEventListener('input', debounce(async () => {
+          const exists = await checkExists('/Account/CheckEmail', 'email', emailInput.value);
+          if (exists) {
+            emailFeedback.style.display = 'inline';
+            emailFeedback.textContent = 'Email already in use';
+          } else {
+            emailFeedback.style.display = 'none';
+            emailFeedback.textContent = '';
+          }
+        }, 400));
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
 </body>
 
