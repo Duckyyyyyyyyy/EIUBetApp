@@ -92,5 +92,27 @@ namespace EIUBetApp.Controllers
 
             return RedirectToAction("RoomManager");
         }
+
+        // add balance
+        [HttpPost]
+        public async Task<IActionResult> AddBalance(Guid playerId, decimal amount)
+        {
+           
+            if (amount <= 0) return BadRequest("Amount must be positive.");
+
+            var player = await _context.Player.FindAsync(playerId);
+            if (player is null) return NotFound();
+
+            player.Balance += amount;
+            await _context.SaveChangesAsync();
+
+            // push real-time update to every client
+            await _hubContext.Clients.All.SendAsync(
+                "UpdatePlayerBalance",
+                new { playerId, newBalance = player.Balance });
+
+            return Ok(new { playerId, player.Balance });
+        }
+
     }
 }
