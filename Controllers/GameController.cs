@@ -2,6 +2,7 @@
 using EIUBetApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Data;
 using System.Security.Claims;
 
@@ -11,13 +12,13 @@ namespace EIUBetApp.Controllers
     public class GameController : Controller
     {
         private readonly EIUBetAppContext _context;
+        private readonly IHubContext<EIUBetAppHub> _hubContext;
         private static readonly Random rand = new();
-        private static int winCount = 0;
-        private static int lossCount = 0;
 
-        public GameController(EIUBetAppContext context)
+        public GameController(EIUBetAppContext context, IHubContext<EIUBetAppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public IActionResult Index(Guid RoomId)
@@ -82,17 +83,12 @@ namespace EIUBetApp.Controllers
 
             string GetResult(int s) => s >= 11 && s <= 17 ? "tai" : (s >= 4 && s <= 10 ? "xiu" : "hoa");
 
-            do
-            {
-                dice = new[] { rand.Next(1, 7), rand.Next(1, 7), rand.Next(1, 7) };
-                sum = dice.Sum();
-                result = GetResult(sum);
-
-            } while (result == prediction && winCount >= lossCount && result != "hoa");
+            dice = new[] { rand.Next(1, 7), rand.Next(1, 7), rand.Next(1, 7) };
+            sum = dice.Sum();
+            result = GetResult(sum);
 
             if (result == prediction)
             {
-                winCount++;
                 player.Balance += betAmount;
             }
             else if (result == "hoa")
@@ -101,7 +97,6 @@ namespace EIUBetApp.Controllers
             }
             else
             {
-                lossCount++;
                 player.Balance -= betAmount;
             }
 
@@ -112,9 +107,7 @@ namespace EIUBetApp.Controllers
                 dice,
                 sum,
                 result,
-                balance = player.Balance,
-                winCount,
-                lossCount
+                balance = player.Balance
             });
         }
     }
