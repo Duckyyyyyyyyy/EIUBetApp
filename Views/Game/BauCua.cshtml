@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = "_GameLayout";
 }
 
@@ -8,6 +7,8 @@
 <head>
     <title>3D Dice Game</title>
     <link rel="stylesheet" href="~/css/Room.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Chatbox.css" asp-append-version="true" />
+
     <style>
         #toast {
             visibility: hidden;
@@ -92,28 +93,28 @@
     <div id="toast"></div>
 
     <!-- Chat popup -->
-    <div id="chatBox" style="
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 300px;
-        max-height: 400px;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        display: flex;
-        flex-direction: column;
-        z-index: 1000;
-        font-family: sans-serif;
-        color:black;">
-        <div style="background-color: #007bff; color: white; padding: 10px; font-weight: bold;">💬 Room Chat</div>
-        <div id="chatMessages" style="flex: 1; padding: 10px; overflow-y: auto;"></div>
-        <div style="display: flex; border-top: 1px solid #ccc;">
-            <input id="chatInput" type="text" placeholder="Type message..." style="flex: 1; padding: 8px; border: none;" />
-            <button id="sendChatBtn" style="padding: 8px 12px; background-color: #007bff; color: white; border: none;">Send</button>
+    <div id="chatBox">
+        <div class="chat-header">
+            <h1>🎰 EIU CASINO CHAT 🎰</h1>
+            <div class="neon-sign">⚡ LIVE • HOT • JACKPOT ⚡</div>
+            <div class="slot-reels">🍒🍋🔔</div>
+        </div>
+        <div id="chatMessages">
+            <div class="message">
+                <strong>Neon_Dealer:</strong> Welcome to EIU Casino Chat! The university that never sleeps! 🌟
+            </div>
+            <div class="message">
+                <strong>HighRoller99:</strong> Let's light up this chat like the Strip! 💫
+            </div>
+            <div class="message jackpot">
+                <strong>🎰 JACKPOT ALERT:</strong> Lucky_777 just hit the MEGA JACKPOT! 💰💰💰
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input id="chatInput" type="text" placeholder="Enter the neon zone..." />
+            <button id="sendChatBtn">Send</button>
         </div>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
         const btn = document.getElementById("spinBtn");
@@ -311,7 +312,7 @@
                 <p>Balance: $${(player.Balance ?? player.balance ?? 0).toFixed(2)}</p>
                 <p>Status: <span class="ready-status ${isReady ? 'ready' : 'not-ready'}">${isReady ? 'Ready' : 'Not Ready'}</span></p>
                 ${isCurrentPlayer && !isReady ? `<a class="readyBtn" href="/Home/Index">Quit</a>
-                
+
                 ` : ''}
             `;
 
