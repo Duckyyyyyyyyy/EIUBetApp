@@ -82,7 +82,7 @@
                 <input id="betAmountInput" type="number" placeholder="Enter Bet Amount" min="1" />
             </div>
 
-            <button class="btn" id="spinBtn">Spin</button>
+            <button class="btn" id="spinBtn">Ready</button>
             <p id="resultText"></p>
             <div class="bgeffect" id="bgeffect"></div>
             <div class="result" id="resultText"></div>
@@ -169,7 +169,7 @@
         }
 
         // Spin button click triggers server spin request
-        btn.addEventListener("click", () => {
+               btn.addEventListener("click", () => {
             if (!userPrediction) {
                 resultDiv.textContent = "Please choose a number to predict.";
                 return;
@@ -185,17 +185,21 @@
                 return;
             }
 
-            setSpinButton(false);
-            resultDiv.textContent = "Spinning...";
+            setSpinButton(false); // disables button
+            btn.disabled = true;
+            btn.title = "Waiting for all players..."; // <- your new message
+            resultDiv.textContent = "Waiting for all players ready...";
 
-            // Call server to start spin
-            connection.invoke("SpinDice", roomId, userPrediction, betAmount, playerId)
+            // Call server to submit prediction and bet
+            connection.invoke("SubmitPredictionAndBet", roomId, playerId, userPrediction, betAmount)
                 .catch(err => {
                     console.error(err);
                     resultDiv.textContent = "Error during spin.";
-                    setSpinButton(true);
+                    btn.disabled = false;
+                    btn.title = ""; // Clear title if error happens
                 });
         });
+
 
         // Server tells clients to start spin animation
         connection.on("StartSpin", (diceResults) => {
@@ -306,8 +310,8 @@
                 <p>${player.Username || player.username || 'Unknown'}</p>
                 <p>Balance: $${(player.Balance ?? player.balance ?? 0).toFixed(2)}</p>
                 <p>Status: <span class="ready-status ${isReady ? 'ready' : 'not-ready'}">${isReady ? 'Ready' : 'Not Ready'}</span></p>
-                ${isCurrentPlayer && !isReady ? `<button class="readyBtn">Ready</button>
-                <a class="btn" href="/Home/Index">Quit</a>
+                ${isCurrentPlayer && !isReady ? `<a class="readyBtn" href="/Home/Index">Quit</a>
+                
                 ` : ''}
             `;
 

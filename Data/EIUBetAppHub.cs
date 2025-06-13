@@ -12,88 +12,139 @@ namespace EIUBetApp.Data
         private static readonly ConcurrentDictionary<string, (Guid roomId, Guid playerId)> _connections = new();
         private static readonly ConcurrentDictionary<Guid, string> _playerConnections = new();
         private static readonly ConcurrentDictionary<Guid, CancellationTokenSource> _disconnectTokens = new();
-       
+        // Dictionary<RoomId, Dictionary<PlayerId, (prediction, betAmount)>>
+        private static readonly Dictionary<string, Dictionary<string, (int prediction, int betAmount)>> RoomPredictions
+            = new Dictionary<string, Dictionary<string, (int, int)>>();
+
+        private static readonly object _lock = new object();
+
         public EIUBetAppHub(EIUBetAppContext context)
         {
             _context = context;
         }
-
-        public async Task SpinDice(string roomId, int prediction, int betAmount, string playerId)
+        public async Task SubmitPredictionAndBet(string roomId, string playerId, int prediction, int betAmount)
         {
+            lock (_lock)
+            {
+                if (!RoomPredictions.ContainsKey(roomId))
+                    RoomPredictions[roomId] = new Dictionary<string, (int, int)>();
+
+                RoomPredictions[roomId][playerId] = (prediction, betAmount);
+            }
+
+            await Clients.Caller.SendAsync("PredictionSubmitted");
+
+            // Check if all players in room have submitted their predictions
+            var totalPlayersInRoom = await _context.ManageRoom
+                .Where(mr => mr.RoomId == Guid.Parse(roomId) && mr.LeaveAt == null)
+                .CountAsync();
+
+            bool allSubmitted = false;
+            lock (_lock)
+            {
+                allSubmitted = RoomPredictions[roomId].Count == totalPlayersInRoom;
+            }
+
+            if (allSubmitted)
+            {
+                // Start the spin for the room
+                await SpinDice(roomId);
+            }
+        }
+
+
+        public async Task SpinDice(string roomId)
+        {
+            Dictionary<string, (int prediction, int betAmount)> playersInRoom = null;
+
+            // Lock access to copy data safely
+            lock (_lock)
+            {
+                if (!RoomPredictions.TryGetValue(roomId, out var roomData) || roomData.Count == 0)
+                {
+                    playersInRoom = null;
+                }
+                else
+                {
+                    // Copy and clear for next round
+                    playersInRoom = new Dictionary<string, (int, int)>(roomData);
+                    RoomPredictions[roomId].Clear();
+                }
+            }
+
+            if (playersInRoom == null || playersInRoom.Count == 0)
+            {
+                await Clients.Group(roomId).SendAsync("SpinResult", new { error = "No players have submitted predictions or bets." });
+                return;
+            }
+
+            // Spin dice once
             Random rand = new Random();
             int[] diceResults = new int[3];
             for (int i = 0; i < 3; i++)
                 diceResults[i] = rand.Next(1, 7);
 
-            int matchCount = diceResults.Count(val => val == prediction);
-            int winnings = matchCount * betAmount;
+            await Clients.Group(roomId).SendAsync("StartSpin", diceResults);
+            await Task.Delay(2000); // simulate spinning animation
 
-            var parsedPlayerId = Guid.Parse(playerId);
-            var player = await _context.Player.FindAsync(parsedPlayerId);
-
-            if (player == null)
+            foreach (var kvp in playersInRoom)
             {
-                await Clients.Caller.SendAsync("SpinResult", new
+                string playerId = kvp.Key;
+                var (prediction, betAmount) = kvp.Value;
+
+                int matchCount = diceResults.Count(val => val == prediction);
+                int winnings = matchCount * betAmount;
+
+                var parsedPlayerId = Guid.Parse(playerId);
+                var player = await _context.Player.FindAsync(parsedPlayerId);
+                if (player == null) continue;
+
+                player.Balance -= betAmount;
+                if (winnings > 0)
+                    player.Balance += (winnings + betAmount);
+
+                // Log the game result
+                var log = new Logs
                 {
-                    error = "Player not found."
-                });
-                return;
+                    LogId = Guid.NewGuid(),
+                    PlayerId = parsedPlayerId,
+                    Action = prediction.ToString(),
+                    GameResult = $"{string.Join(",", diceResults)}; Matches: {matchCount}; Winnings: {winnings}",
+                    TimeAt = DateTime.UtcNow,
+                    RoomId = Guid.Parse(roomId),
+                    IsDelete = false,
+                    GameId = Guid.Parse("868773BA-CDEF-40CA-8F39-81AF12910B70")
+                };
+
+                _context.Logs.Add(log);
+
+                var result = new
+                {
+                    diceResults,
+                    matchCount,
+                    winnings,
+                    playerId,
+                    message = matchCount == 0 ? "Không trúng." : $"Trúng {matchCount} lần! Thắng: ${winnings}"
+                };
+
+                // Send result to the specific player
+                await Clients.User(playerId).SendAsync("SpinResult", result); // Requires mapping userId to connectionId via OnConnectedAsync
+
+                var updatedBalance = new
+                {
+                    playerId,
+                    newBalance = player.Balance
+                };
+
+                await Clients.Group(roomId).SendAsync("UpdatePlayerBalance", updatedBalance);
             }
 
-            // Update balance: subtract bet, add winnings
-            player.Balance -= betAmount;
-            if (winnings > 0)
-                player.Balance += (winnings + betAmount);  // Refund bet + pay winnings
-
-            // Save the game log
-            var logEntry = new Logs
-            {
-                LogId = Guid.NewGuid(),
-                PlayerId = parsedPlayerId,
-                Action = prediction.ToString(), // Their prediction as string
-                GameResult = $"{string.Join(",", diceResults)}; Matches: {matchCount}; Winnings: {winnings}",
-                TimeAt = DateTime.UtcNow,
-                RoomId = Guid.Parse(roomId),
-                IsDelete = false,
-                GameId = Guid.Parse("868773BA-CDEF-40CA-8F39-81AF12910B70")
-            };
-
-            _context.Logs.Add(logEntry);
-
             await _context.SaveChangesAsync();
-
-            var updatedPlayerData = new
-            {
-                playerId = playerId,
-                newBalance = player.Balance
-            };
-
-            var result = new
-            {
-                diceResults = diceResults,
-                matchCount = matchCount,
-                winnings = winnings,
-                playerId = playerId,
-                message = matchCount == 0 ? "Không trúng." : $"Trúng {matchCount} lần! Thắng: ${winnings}"
-            };
-
-            // Notify clients in the room that the dice spin started
-            await Clients.Group(roomId).SendAsync("StartSpin", diceResults);
-
-            await Task.Delay(2000); // Simulate spinning animation
-
-            // Send the spin result to clients in the room
-            await Clients.Group(roomId).SendAsync("SpinResult", result);
-
-            // Notify all clients in the room about the updated balance (optional)
-            await Clients.Group(roomId).SendAsync("UpdatePlayerBalance", updatedPlayerData);
-
-            // Send the full updated player list in the room to all clients to keep UI synchronized
             await SendPlayerListUpdate(Guid.Parse(roomId), roomId);
         }
 
 
-
+       
         //Reset all players' ready status in a room
         public async Task ResetAllPlayersReadyStatus(string roomId)
         {
