@@ -26,7 +26,7 @@ namespace EIUBetApp.Controllers
         {
             if (!User.IsInRole("Admin"))
             {
-                return RedirectToAction("AccessDenied", "Account");
+                return RedirectToAction("Account", "AccessDenied");
             }
 
             return View();

@@ -463,7 +463,7 @@ namespace EIUBetApp.Data
         // Send chat message to all in a room
         public async Task SendMessageToRoom(string roomId, string username, string message)
         {
-            await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.UtcNow.ToString("HH:mm"));
+            await Clients.Group(roomId).SendAsync("ReceiveMessage", username, message, DateTime.Now.ToString("HH:mm"));
         }
 
         // Static helper methods for notifying clients about room changes

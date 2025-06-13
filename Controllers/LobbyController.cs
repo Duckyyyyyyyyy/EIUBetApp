@@ -39,9 +39,5 @@ namespace EIUBetApp.Controllers
             var model = new Tuple<IEnumerable<Player>, IEnumerable<Room>>(players, rooms);
             return View(model);
         }
-
-
-
-
     }
 }
